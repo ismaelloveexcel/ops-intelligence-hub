@@ -282,9 +282,9 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
         {/* Risk flags */}
         {(row.error_risk || row.affects_client || row.involves_money) && (
           <div className="flex flex-wrap gap-2 mb-4">
-            {row.error_risk && <span className="badge badge-new">⚠ Error Risk</span>}
-            {row.affects_client && <span className="badge badge-in-progress">👤 Affects Client</span>}
-            {row.involves_money && <span className="badge badge-reviewing">💰 Involves Money</span>}
+            {row.error_risk && <span className="badge badge-new"><span aria-label="Warning">⚠</span> Error Risk</span>}
+            {row.affects_client && <span className="badge badge-in-progress"><span aria-label="Person">👤</span> Affects Client</span>}
+            {row.involves_money && <span className="badge badge-reviewing"><span aria-label="Money">💰</span> Involves Money</span>}
           </div>
         )}
 
