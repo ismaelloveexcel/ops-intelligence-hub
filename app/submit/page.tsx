@@ -4,8 +4,8 @@ import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import GlassCard from '@/components/GlassCard'
 import ImpactDot from '@/components/ImpactDot'
-import { Department, Frequency, Impact } from '@/lib/types'
-import { ChevronLeft, Loader2 } from 'lucide-react'
+import { Department, Frequency, Impact, SubmissionType, SUBMISSION_TYPE_LABELS } from '@/lib/types'
+import { ChevronLeft, Loader2, AlertTriangle, Lightbulb, Zap } from 'lucide-react'
 import Link from 'next/link'
 
 // ─── Field helpers ────────────────────────────────────────────────────────────
@@ -38,6 +38,14 @@ function SelectField({ label, id, value, onChange, required, children }: SelectF
   )
 }
 
+// ─── Type selector icons ──────────────────────────────────────────────────────
+
+const TYPE_CONFIG: Record<SubmissionType, { icon: React.ElementType; desc: string }> = {
+  problem: { icon: AlertTriangle, desc: 'Report an inefficient process or issue' },
+  suggestion: { icon: Lightbulb, desc: 'Suggest an improvement to how we work' },
+  idea: { icon: Zap, desc: 'Quick idea — just a sentence or two' },
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SubmitPage() {
@@ -46,13 +54,24 @@ export default function SubmitPage() {
   const [error, setError] = useState('')
 
   // Form state
+  const [submissionType, setSubmissionType] = useState<SubmissionType>('problem')
   const [isAnonymous, setIsAnonymous] = useState(false)
   const [name, setName] = useState('')
   const [department, setDepartment] = useState<Department | ''>('')
   const [description, setDescription] = useState('')
+  const [processName, setProcessName] = useState('')
+  const [systemUsed, setSystemUsed] = useState('')
+  const [timePerOccurrence, setTimePerOccurrence] = useState('')
+  const [occurrencesPerWeek, setOccurrencesPerWeek] = useState('')
+  const [frustrationLevel, setFrustrationLevel] = useState<number | null>(null)
+  const [errorRisk, setErrorRisk] = useState(false)
+  const [affectsClient, setAffectsClient] = useState(false)
+  const [involvesMoney, setInvolvesMoney] = useState(false)
   const [frequency, setFrequency] = useState<Frequency | ''>('')
   const [impact, setImpact] = useState<Impact | ''>('')
   const [suggestedFix, setSuggestedFix] = useState('')
+
+  const isQuickIdea = submissionType === 'idea'
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -64,12 +83,21 @@ export default function SubmitPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          submission_type: submissionType,
           submitted_by: isAnonymous ? null : name.trim() || null,
           is_anonymous: isAnonymous,
           department,
           description: description.trim(),
-          frequency,
-          impact,
+          process_name: processName.trim() || null,
+          system_used: systemUsed.trim() || null,
+          time_per_occurrence: timePerOccurrence ? parseFloat(timePerOccurrence) : null,
+          occurrences_per_week: occurrencesPerWeek ? parseFloat(occurrencesPerWeek) : null,
+          frustration_level: frustrationLevel,
+          error_risk: errorRisk,
+          affects_client: affectsClient,
+          involves_money: involvesMoney,
+          frequency: isQuickIdea ? 'occasional' : frequency,
+          impact: isQuickIdea ? 'medium' : impact,
           suggested_fix: suggestedFix.trim() || null,
         }),
       })
@@ -101,12 +129,33 @@ export default function SubmitPage() {
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-2">
           <ImpactDot />
-          <p className="mono-label">New Submission</p>
+          <p className="mono-label">Improve Our Work</p>
         </div>
-        <h1 className="text-2xl font-bold tracking-tight">Report a Pain Point</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Share Your Input</h1>
         <p className="text-white/50 text-sm mt-2 leading-relaxed">
-          Help us fix what&apos;s slowing the team down. Takes about 60 seconds.
+          Report a problem, suggest an improvement, or share a quick idea.
+          Your input drives what we fix and build next.
         </p>
+      </div>
+
+      {/* Submission type selector */}
+      <div className="grid grid-cols-3 gap-2 mb-6">
+        {(Object.keys(TYPE_CONFIG) as SubmissionType[]).map((type) => {
+          const { icon: Icon, desc } = TYPE_CONFIG[type]
+          const active = submissionType === type
+          return (
+            <button
+              key={type}
+              type="button"
+              onClick={() => setSubmissionType(type)}
+              className={`action-btn ${active ? 'active' : ''}`}
+              title={desc}
+            >
+              <Icon size={20} />
+              <span>{SUBMISSION_TYPE_LABELS[type]}</span>
+            </button>
+          )
+        })}
       </div>
 
       <GlassCard className="p-6">
@@ -138,9 +187,7 @@ export default function SubmitPage() {
           {/* Name (hidden when anonymous) */}
           {!isAnonymous && (
             <div className="flex flex-col gap-2">
-              <label htmlFor="name" className="mono-label">
-                Your Name
-              </label>
+              <label htmlFor="name" className="mono-label">Your Name</label>
               <input
                 id="name"
                 type="text"
@@ -166,19 +213,28 @@ export default function SubmitPage() {
             <option value="client_service">Client Service</option>
             <option value="finance">Finance</option>
             <option value="admin">Admin</option>
+            <option value="marketing">Marketing</option>
+            <option value="introducers">Introducers &amp; Partners</option>
+            <option value="management">Management</option>
             <option value="other">Other</option>
           </SelectField>
 
           {/* Description */}
           <div className="flex flex-col gap-2">
             <label htmlFor="description" className="mono-label">
-              What&apos;s the problem?
+              {isQuickIdea ? "What's your idea?" : "What's the issue or suggestion?"}
             </label>
             <textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe the pain point clearly. What are you doing manually? What breaks or slows you down?"
+              placeholder={
+                isQuickIdea
+                  ? 'Describe your idea in a few sentences.'
+                  : submissionType === 'suggestion'
+                  ? 'What could be improved? What would work better?'
+                  : 'Describe the pain point. What are you doing manually? What breaks or slows you down?'
+              }
               required
               maxLength={2000}
               className="input"
@@ -189,39 +245,149 @@ export default function SubmitPage() {
             </span>
           </div>
 
-          {/* Frequency */}
-          <SelectField
-            label="How often does this happen?"
-            id="frequency"
-            value={frequency}
-            onChange={(v) => setFrequency(v as Frequency)}
-            required
-          >
-            <option value="" disabled>Select frequency…</option>
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-            <option value="occasional">Occasionally</option>
-          </SelectField>
+          {/* Extended fields (not shown for quick ideas) */}
+          {!isQuickIdea && (
+            <>
+              {/* Process & system */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="process_name" className="mono-label">
+                    Process Name <span className="text-white/30 normal-case tracking-normal text-xs ml-1">(optional)</span>
+                  </label>
+                  <input
+                    id="process_name"
+                    type="text"
+                    value={processName}
+                    onChange={(e) => setProcessName(e.target.value)}
+                    placeholder="e.g. Client onboarding"
+                    className="input"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="system_used" className="mono-label">
+                    System Used <span className="text-white/30 normal-case tracking-normal text-xs ml-1">(optional)</span>
+                  </label>
+                  <input
+                    id="system_used"
+                    type="text"
+                    value={systemUsed}
+                    onChange={(e) => setSystemUsed(e.target.value)}
+                    placeholder="e.g. Salesforce, Excel"
+                    className="input"
+                  />
+                </div>
+              </div>
 
-          {/* Impact */}
-          <SelectField
-            label="Impact level"
-            id="impact"
-            value={impact}
-            onChange={(v) => setImpact(v as Impact)}
-            required
-          >
-            <option value="" disabled>Select impact…</option>
-            <option value="low">Low — minor inconvenience</option>
-            <option value="medium">Medium — regularly wastes time</option>
-            <option value="high">High — major blocker or risk</option>
-          </SelectField>
+              {/* Time metrics */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="time_per" className="mono-label">
+                    Time per occurrence <span className="text-white/30 normal-case tracking-normal text-xs ml-1">(mins)</span>
+                  </label>
+                  <input
+                    id="time_per"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={timePerOccurrence}
+                    onChange={(e) => setTimePerOccurrence(e.target.value)}
+                    placeholder="e.g. 15"
+                    className="input"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="occ_week" className="mono-label">
+                    Occurrences / week
+                  </label>
+                  <input
+                    id="occ_week"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={occurrencesPerWeek}
+                    onChange={(e) => setOccurrencesPerWeek(e.target.value)}
+                    placeholder="e.g. 5"
+                    className="input"
+                  />
+                </div>
+              </div>
+
+              {/* Frustration level */}
+              <div className="flex flex-col gap-2">
+                <p className="mono-label">Frustration Level</p>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setFrustrationLevel(n)}
+                      className={`action-btn flex-1 py-3 ${frustrationLevel === n ? 'active' : ''}`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex justify-between text-white/25 text-xs font-mono">
+                  <span>Low</span>
+                  <span>High</span>
+                </div>
+              </div>
+
+              {/* Risk flags */}
+              <div className="flex flex-col gap-3">
+                <p className="mono-label">Risk Flags <span className="text-white/30 normal-case tracking-normal text-xs ml-1">(check any that apply)</span></p>
+                {[
+                  { label: 'Risk of errors / mistakes', value: errorRisk, set: setErrorRisk },
+                  { label: 'Affects clients directly', value: affectsClient, set: setAffectsClient },
+                  { label: 'Involves money / financial data', value: involvesMoney, set: setInvolvesMoney },
+                ].map(({ label, value, set }) => (
+                  <label key={label} className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={value}
+                      onChange={(e) => set(e.target.checked)}
+                      className="w-4 h-4 rounded border-teal/30 bg-navy-800 text-teal focus:ring-teal/30"
+                    />
+                    <span className="text-white/60 text-sm">{label}</span>
+                  </label>
+                ))}
+              </div>
+
+              {/* Frequency */}
+              <SelectField
+                label="How often does this happen?"
+                id="frequency"
+                value={frequency}
+                onChange={(v) => setFrequency(v as Frequency)}
+                required
+              >
+                <option value="" disabled>Select frequency…</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="occasional">Occasionally</option>
+              </SelectField>
+
+              {/* Impact */}
+              <SelectField
+                label="Impact level"
+                id="impact"
+                value={impact}
+                onChange={(v) => setImpact(v as Impact)}
+                required
+              >
+                <option value="" disabled>Select impact…</option>
+                <option value="low">Low — minor inconvenience</option>
+                <option value="medium">Medium — regularly wastes time</option>
+                <option value="high">High — major blocker or risk</option>
+              </SelectField>
+            </>
+          )}
 
           {/* Suggested Fix (optional) */}
           <div className="flex flex-col gap-2">
             <label htmlFor="suggested_fix" className="mono-label">
-              Suggested Fix{' '}
+              {submissionType === 'suggestion' ? 'Your Suggestion' : 'Suggested Fix'}{' '}
               <span className="text-white/30 normal-case tracking-normal text-xs ml-1">
                 (optional)
               </span>
@@ -247,7 +413,7 @@ export default function SubmitPage() {
           {/* Submit */}
           <button
             type="submit"
-            disabled={loading || !department || !description.trim() || !frequency || !impact}
+            disabled={loading || !department || !description.trim() || (!isQuickIdea && (!frequency || !impact))}
             className="btn-primary w-full mt-1"
           >
             {loading ? (
@@ -256,7 +422,7 @@ export default function SubmitPage() {
                 Submitting…
               </>
             ) : (
-              'Submit Issue'
+              isQuickIdea ? 'Submit Idea' : submissionType === 'suggestion' ? 'Submit Suggestion' : 'Submit Issue'
             )}
           </button>
 

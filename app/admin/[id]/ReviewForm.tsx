@@ -14,11 +14,19 @@ import {
   Department,
   Impact,
   Frequency,
+  ReviewCategory,
+  ImplementationEffort,
   ACTION_TYPE_LABELS,
   PRIORITY_LABELS,
   EASE_LABELS,
   STATUS_LABELS,
   FREQUENCY_LABELS,
+  REVIEW_CATEGORY_LABELS,
+  IMPLEMENTATION_EFFORT_LABELS,
+  SUBMISSION_TYPE_LABELS,
+  SubmissionType,
+  calcHoursWastedMonth,
+  calcPriorityScore,
 } from '@/lib/types'
 import {
   Zap,
@@ -31,6 +39,8 @@ import {
   Rss,
   Loader2,
   CheckCircle2,
+  Clock,
+  TrendingUp,
 } from 'lucide-react'
 
 // ─── Action Icon Map ──────────────────────────────────────────────────────────
@@ -45,43 +55,26 @@ const ACTION_ICONS: Record<ActionType, React.ElementType> = {
 }
 
 const ACTION_TYPES: ActionType[] = [
-  'quick_fix',
-  'sop_update',
-  'automation',
-  'training',
-  'escalate',
-  'reject',
+  'quick_fix', 'sop_update', 'automation', 'training', 'escalate', 'reject',
 ]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
+    day: 'numeric', month: 'short', year: 'numeric',
   })
 }
 
 function SelectInput({
-  label,
-  value,
-  onChange,
-  children,
+  label, value, onChange, children,
 }: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-  children: React.ReactNode
+  label: string; value: string; onChange: (v: string) => void; children: React.ReactNode
 }) {
   return (
     <div className="flex flex-col gap-1.5">
       <label className="mono-label">{label}</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="input text-sm"
-      >
+      <select value={value} onChange={(e) => onChange(e.target.value)} className="input text-sm">
         {children}
       </select>
     </div>
@@ -105,9 +98,21 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
   const [status, setStatus] = useState<SubmissionStatus>(row.status)
   const [adminNotes, setAdminNotes] = useState(row.admin_notes ?? '')
 
+  // New scoring fields
+  const [automationPotential, setAutomationPotential] = useState<number | null>(row.automation_potential ?? null)
+  const [implementationEffort, setImplementationEffort] = useState<ImplementationEffort | ''>(row.implementation_effort ?? '')
+  const [reviewCategory, setReviewCategory] = useState<ReviewCategory | ''>(row.review_category ?? '')
+  const [impactLevel, setImpactLevel] = useState<Impact | ''>(row.impact_level ?? '')
+  const [estHoursSaved, setEstHoursSaved] = useState(
+    row.estimated_hours_saved_monthly != null ? String(row.estimated_hours_saved_monthly) : ''
+  )
+
   // Publish form state
   const [feedTitle, setFeedTitle] = useState('')
   const [feedWhatChanged, setFeedWhatChanged] = useState('')
+  const [feedHoursSaved, setFeedHoursSaved] = useState('')
+  const [feedBeforeSummary, setFeedBeforeSummary] = useState('')
+  const [feedAfterSummary, setFeedAfterSummary] = useState('')
 
   // Loading states
   const [savingReview, setSavingReview] = useState(false)
@@ -117,8 +122,15 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
   const [saveError, setSaveError] = useState('')
   const [publishError, setPublishError] = useState('')
 
-  // Already published?
   const isPublished = row.published_to_feed === true
+
+  // Computed metrics
+  const hoursWastedMonth = calcHoursWastedMonth(
+    row.time_per_occurrence, row.occurrences_per_week
+  )
+  const priorityScore = calcPriorityScore(
+    hoursWastedMonth, automationPotential, row.frustration_level
+  )
 
   // ─── Save review ───────────────────────────────────────────────────────────
 
@@ -139,6 +151,11 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
           time_wasted_hrs: timeWasted ? parseFloat(timeWasted) : null,
           admin_notes: adminNotes.trim() || null,
           status,
+          automation_potential: automationPotential,
+          implementation_effort: implementationEffort || null,
+          review_category: reviewCategory || null,
+          impact_level: impactLevel || null,
+          estimated_hours_saved_monthly: estHoursSaved ? parseFloat(estHoursSaved) : null,
         }),
       })
       if (!res.ok) throw new Error((await res.json()).error ?? 'Save failed')
@@ -155,7 +172,7 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
 
   async function handlePublish() {
     if (!feedTitle.trim() || !feedWhatChanged.trim()) {
-      setPublishError('Both fields are required to publish.')
+      setPublishError('Both title and description are required.')
       return
     }
     setPublishing(true)
@@ -168,6 +185,9 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
         body: JSON.stringify({
           title: feedTitle.trim(),
           what_changed: feedWhatChanged.trim(),
+          hours_saved: feedHoursSaved ? parseFloat(feedHoursSaved) : null,
+          before_summary: feedBeforeSummary.trim() || null,
+          after_summary: feedAfterSummary.trim() || null,
         }),
       })
       if (!res.ok) throw new Error((await res.json()).error ?? 'Publish failed')
@@ -197,6 +217,9 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
 
         {/* Badges */}
         <div className="flex flex-wrap gap-2 mb-4">
+          <span className="badge badge-dept">
+            {SUBMISSION_TYPE_LABELS[(row.submission_type ?? 'problem') as SubmissionType]}
+          </span>
           <DeptBadge department={row.department as Department} />
           <ImpactBadge impact={row.impact as Impact} />
           <span className="badge badge-dept">
@@ -208,6 +231,62 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
         <p className="text-white/80 text-sm leading-relaxed mb-4 border-l-2 border-teal/30 pl-4">
           {row.description}
         </p>
+
+        {/* Process / system info */}
+        {(row.process_name || row.system_used) && (
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            {row.process_name && (
+              <div className="bg-white/[0.03] rounded-xl p-3 border border-white/[0.06]">
+                <p className="mono-label mb-1">Process</p>
+                <p className="text-white/60 text-sm">{row.process_name}</p>
+              </div>
+            )}
+            {row.system_used && (
+              <div className="bg-white/[0.03] rounded-xl p-3 border border-white/[0.06]">
+                <p className="mono-label mb-1">System</p>
+                <p className="text-white/60 text-sm">{row.system_used}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Computed metrics */}
+        {(hoursWastedMonth != null || row.frustration_level != null) && (
+          <div className="flex flex-wrap gap-3 mb-4">
+            {hoursWastedMonth != null && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-danger/10 border border-danger/20">
+                <Clock size={14} className="text-danger" />
+                <span className="text-danger text-sm font-semibold">
+                  {hoursWastedMonth.toFixed(1)}h wasted/month
+                </span>
+              </div>
+            )}
+            {row.frustration_level != null && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gold/10 border border-gold/20">
+                <span className="text-gold text-sm font-semibold">
+                  Frustration: {row.frustration_level}/5
+                </span>
+              </div>
+            )}
+            {priorityScore != null && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-teal/10 border border-teal/20">
+                <TrendingUp size={14} className="text-teal" />
+                <span className="text-teal text-sm font-semibold">
+                  Priority Score: {priorityScore}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Risk flags */}
+        {(row.error_risk || row.affects_client || row.involves_money) && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {row.error_risk && <span className="badge badge-new">⚠ Error Risk</span>}
+            {row.affects_client && <span className="badge badge-in-progress">👤 Affects Client</span>}
+            {row.involves_money && <span className="badge badge-reviewing">💰 Involves Money</span>}
+          </div>
+        )}
 
         {/* Suggested fix */}
         {row.suggested_fix && (
@@ -252,8 +331,53 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
           </div>
         </div>
 
+        {/* Automation Potential (1–5 buttons) */}
+        <div className="mb-5">
+          <p className="text-white/40 text-xs font-mono uppercase tracking-widest mb-3">
+            Automation Potential
+          </p>
+          <div className="flex gap-2">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setAutomationPotential(n)}
+                className={`action-btn flex-1 py-3 ${automationPotential === n ? 'active' : ''}`}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+          <div className="flex justify-between text-white/25 text-xs font-mono mt-1">
+            <span>Low</span>
+            <span>High</span>
+          </div>
+        </div>
+
         {/* Fields grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <SelectInput
+            label="Review Category"
+            value={reviewCategory}
+            onChange={(v) => setReviewCategory(v as ReviewCategory | '')}
+          >
+            <option value="">— Category —</option>
+            {(Object.keys(REVIEW_CATEGORY_LABELS) as ReviewCategory[]).map((c) => (
+              <option key={c} value={c}>{REVIEW_CATEGORY_LABELS[c]}</option>
+            ))}
+          </SelectInput>
+
+          <SelectInput
+            label="Implementation Effort"
+            value={implementationEffort}
+            onChange={(v) => setImplementationEffort(v as ImplementationEffort | '')}
+          >
+            <option value="">— Effort —</option>
+            {(Object.keys(IMPLEMENTATION_EFFORT_LABELS) as ImplementationEffort[]).map((e) => (
+              <option key={e} value={e}>{IMPLEMENTATION_EFFORT_LABELS[e]}</option>
+            ))}
+          </SelectInput>
+
           <SelectInput
             label="Priority"
             value={priority}
@@ -261,10 +385,19 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
           >
             <option value="">— Priority —</option>
             {(Object.keys(PRIORITY_LABELS) as Priority[]).map((p) => (
-              <option key={p} value={p}>
-                {PRIORITY_LABELS[p]}
-              </option>
+              <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>
             ))}
+          </SelectInput>
+
+          <SelectInput
+            label="Impact Level"
+            value={impactLevel}
+            onChange={(v) => setImpactLevel(v as Impact | '')}
+          >
+            <option value="">— Impact —</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
           </SelectInput>
 
           <SelectInput
@@ -274,11 +407,22 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
           >
             <option value="">— Ease —</option>
             {(Object.keys(EASE_LABELS) as Ease[]).map((e) => (
-              <option key={e} value={e}>
-                {EASE_LABELS[e]}
-              </option>
+              <option key={e} value={e}>{EASE_LABELS[e]}</option>
             ))}
           </SelectInput>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="mono-label">Est. Hours Saved / Month</label>
+            <input
+              type="number"
+              value={estHoursSaved}
+              onChange={(e) => setEstHoursSaved(e.target.value)}
+              placeholder="e.g. 10"
+              min="0"
+              step="0.5"
+              className="input text-sm"
+            />
+          </div>
 
           <div className="flex flex-col gap-1.5">
             <label className="mono-label">Owner</label>
@@ -320,9 +464,7 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
             onChange={(v) => setStatus(v as SubmissionStatus)}
           >
             {(Object.keys(STATUS_LABELS) as SubmissionStatus[]).map((s) => (
-              <option key={s} value={s}>
-                {STATUS_LABELS[s]}
-              </option>
+              <option key={s} value={s}>{STATUS_LABELS[s]}</option>
             ))}
           </SelectInput>
         </div>
@@ -342,30 +484,16 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
         {/* Save messages */}
         {saveMsg && (
           <div className="flex items-center gap-2 text-success text-sm mb-3">
-            <CheckCircle2 size={15} />
-            {saveMsg}
+            <CheckCircle2 size={15} /> {saveMsg}
           </div>
         )}
-        {saveError && (
-          <div className="text-danger text-sm mb-3">{saveError}</div>
-        )}
+        {saveError && <div className="text-danger text-sm mb-3">{saveError}</div>}
 
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={savingReview}
-          className="btn-primary"
-        >
+        <button type="button" onClick={handleSave} disabled={savingReview} className="btn-primary">
           {savingReview ? (
-            <>
-              <Loader2 size={15} className="animate-spin" />
-              Saving…
-            </>
+            <><Loader2 size={15} className="animate-spin" /> Saving…</>
           ) : (
-            <>
-              <Save size={15} />
-              Save Review
-            </>
+            <><Save size={15} /> Save Review</>
           )}
         </button>
       </GlassCard>
@@ -389,17 +517,13 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
         ) : (
           <>
             <p className="text-white/45 text-xs mb-4 leading-relaxed">
-              Write a short, employee-friendly summary that will appear in the public
-              &quot;You Said / We Fixed&quot; feed.
+              Write a short, employee-friendly summary for the &quot;You Said / We Fixed&quot; feed.
             </p>
 
             <div className="flex flex-col gap-4 mb-5">
               <div className="flex flex-col gap-1.5">
                 <label className="mono-label">
-                  Fix Title{' '}
-                  <span className="text-white/30 normal-case tracking-normal text-xs ml-1">
-                    visible to all employees
-                  </span>
+                  Fix Title <span className="text-white/30 normal-case tracking-normal text-xs ml-1">visible to all</span>
                 </label>
                 <input
                   type="text"
@@ -416,26 +540,55 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
                 <textarea
                   value={feedWhatChanged}
                   onChange={(e) => setFeedWhatChanged(e.target.value)}
-                  placeholder="Describe what was done and the benefit to the team. Keep it clear and positive."
-                  rows={4}
+                  placeholder="Describe what was done and the benefit."
+                  rows={3}
                   maxLength={500}
                   className="input text-sm"
                 />
-                <span className="text-white/25 text-xs font-mono text-right">
-                  {feedWhatChanged.length}/500
-                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="mono-label">Hours Saved</label>
+                  <input
+                    type="number"
+                    value={feedHoursSaved}
+                    onChange={(e) => setFeedHoursSaved(e.target.value)}
+                    placeholder="e.g. 8"
+                    min="0"
+                    step="0.5"
+                    className="input text-sm"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="mono-label">Before</label>
+                  <input
+                    type="text"
+                    value={feedBeforeSummary}
+                    onChange={(e) => setFeedBeforeSummary(e.target.value)}
+                    placeholder="e.g. 30 min manual copy"
+                    className="input text-sm"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="mono-label">After</label>
+                  <input
+                    type="text"
+                    value={feedAfterSummary}
+                    onChange={(e) => setFeedAfterSummary(e.target.value)}
+                    placeholder="e.g. 2 min automated"
+                    className="input text-sm"
+                  />
+                </div>
               </div>
             </div>
 
             {publishMsg && (
               <div className="flex items-center gap-2 text-success text-sm mb-3">
-                <CheckCircle2 size={15} />
-                {publishMsg}
+                <CheckCircle2 size={15} /> {publishMsg}
               </div>
             )}
-            {publishError && (
-              <div className="text-danger text-sm mb-3">{publishError}</div>
-            )}
+            {publishError && <div className="text-danger text-sm mb-3">{publishError}</div>}
 
             <button
               type="button"
@@ -444,15 +597,9 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
               className="btn-primary"
             >
               {publishing ? (
-                <>
-                  <Loader2 size={15} className="animate-spin" />
-                  Publishing…
-                </>
+                <><Loader2 size={15} className="animate-spin" /> Publishing…</>
               ) : (
-                <>
-                  <Rss size={15} />
-                  Publish to Feed
-                </>
+                <><Rss size={15} /> Publish to Feed</>
               )}
             </button>
           </>

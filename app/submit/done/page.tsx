@@ -23,7 +23,7 @@ export default function SubmitDonePage() {
           {/* Heading */}
           <p className="mono-label mb-3">Submission Received</p>
           <h1 className="text-2xl font-bold tracking-tight mb-3">
-            Thanks for speaking up.
+            Thanks for your input.
           </h1>
           <p className="text-white/55 text-sm leading-relaxed mb-8">
             Your submission has been logged and will be reviewed by the operations team.
@@ -57,7 +57,7 @@ export default function SubmitDonePage() {
           <div className="flex flex-col gap-3">
             <Link href="/submit" className="btn-secondary w-full">
               <ArrowLeft size={15} />
-              Submit another issue
+              Submit another
             </Link>
             <Link href="/" className="btn-secondary w-full">
               <Home size={15} />

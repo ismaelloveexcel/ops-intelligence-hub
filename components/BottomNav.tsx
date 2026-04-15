@@ -2,14 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { MessageSquare, Mail, FileText, LayoutGrid, QrCode } from 'lucide-react'
+import { Home, Lightbulb, FileText, BarChart3, LayoutGrid } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { icon: MessageSquare, label: 'Home', href: '/' },
-  { icon: Mail, label: 'Submit', href: '/submit' },
+  { icon: Home, label: 'Home', href: '/' },
+  { icon: Lightbulb, label: 'Improve', href: '/submit' },
   { icon: FileText, label: 'Updates', href: '/updates' },
+  { icon: BarChart3, label: 'Dashboard', href: '/admin/dashboard' },
   { icon: LayoutGrid, label: 'Admin', href: '/admin' },
-  { icon: QrCode, label: 'QR', href: '#' },
 ]
 
 export default function BottomNav() {
@@ -21,7 +21,7 @@ export default function BottomNav() {
         const isActive =
           href === '/'
             ? pathname === '/'
-            : href !== '#' && pathname.startsWith(href)
+            : pathname.startsWith(href)
 
         return (
           <Link key={label} href={href} className="bottom-nav-item">

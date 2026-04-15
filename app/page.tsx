@@ -71,7 +71,7 @@ export default async function HomePage() {
           <span className="teal-gradient-text">We Fixed.</span>
         </h1>
         <p className="text-white/55 text-base leading-relaxed max-w-sm">
-          A living record of the pain points our team raised — and every fix we shipped.
+          A living record of operational improvements — driven by your submissions.
         </p>
       </section>
 
@@ -119,6 +119,11 @@ export default async function HomePage() {
                   <div className="flex items-center gap-2">
                     <ImpactDot size="sm" />
                     <DeptBadge department={item.department as Department} size="sm" />
+                    {item.hours_saved != null && item.hours_saved > 0 && (
+                      <span className="badge badge-new text-[10px]">
+                        {item.hours_saved}h saved
+                      </span>
+                    )}
                   </div>
                   <span className="text-white/30 text-xs font-mono shrink-0">
                     {timeAgo(item.published_at)}
@@ -140,12 +145,12 @@ export default async function HomePage() {
       <section className="hidden sm:block px-5 pb-12 max-w-2xl mx-auto">
         <GlassCard highlighted className="flex items-center justify-between gap-4 px-6 py-5">
           <div>
-            <p className="text-white font-semibold mb-0.5">Got a pain point?</p>
+            <p className="text-white font-semibold mb-0.5">Got a suggestion or pain point?</p>
             <p className="text-white/50 text-sm">It takes 60 seconds. Anonymous submissions welcome.</p>
           </div>
           <Link href="/submit" className="btn-primary shrink-0">
             <Plus size={16} />
-            Report Issue
+            Improve Our Work
           </Link>
         </GlassCard>
       </section>
