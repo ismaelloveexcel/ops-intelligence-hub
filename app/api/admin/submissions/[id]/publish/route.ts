@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { validateAdminRequest } from '@/lib/admin-auth'
 
 // ─── POST — publish submission to the public feed ────────────────────────────
 
@@ -7,9 +8,12 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const authErr = validateAdminRequest(req)
+  if (authErr) return authErr
+
   try {
     const body = await req.json()
-    const { title, what_changed } = body
+    const { title, what_changed, hours_saved, before_summary, after_summary } = body
 
     if (!title || typeof title !== 'string' || title.trim().length === 0) {
       return NextResponse.json({ error: 'Title is required.' }, { status: 400 })
@@ -36,6 +40,9 @@ export async function POST(
       what_changed: what_changed.trim(),
       department: submission.department,
       published_at: new Date().toISOString(),
+      hours_saved: hours_saved ?? null,
+      before_summary: before_summary?.trim() || null,
+      after_summary: after_summary?.trim() || null,
     })
 
     if (feedError) {
@@ -43,8 +50,8 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to publish to feed.' }, { status: 500 })
     }
 
-    // Mark review_actions.published_to_feed = true (upsert to handle missing row)
-    await supabaseAdmin
+    // Mark review_actions.published_to_feed = true
+    const { error: reviewErr } = await supabaseAdmin
       .from('review_actions')
       .upsert(
         {
@@ -55,11 +62,20 @@ export async function POST(
         { onConflict: 'submission_id' }
       )
 
+    if (reviewErr) {
+      console.error('[POST publish] review_actions upsert:', reviewErr)
+      // Non-fatal — feed item already written
+    }
+
     // Update submission status to 'implemented'
-    await supabaseAdmin
+    const { error: statusErr } = await supabaseAdmin
       .from('submissions')
       .update({ status: 'implemented' })
       .eq('id', params.id)
+
+    if (statusErr) {
+      console.error('[POST publish] status update:', statusErr)
+    }
 
     return NextResponse.json({ success: true })
   } catch (err) {
