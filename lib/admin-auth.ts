@@ -3,20 +3,23 @@ import { NextRequest, NextResponse } from 'next/server'
 /**
  * Validate that the incoming request is authorised for admin operations.
  *
- * Strategy (layered):
- * 1. If ADMIN_API_SECRET is configured → require X-Admin-Key header match.
- * 2. In development (NODE_ENV === 'development') → allow through with a warning.
- * 3. Otherwise → reject.
+ * Defence-in-depth check used INSIDE individual API route handlers.
+ * Primary auth is handled by middleware.ts (cookie-based).
+ * This function provides a secondary check in case middleware is bypassed.
  *
- * This is NOT a substitute for Supabase Auth or a full auth system.
- * It is a pragmatic first-layer guard for an internal tool.
+ * Strategy:
+ * 1. If ADMIN_API_SECRET is configured → require matching `ops-admin-token` cookie.
+ * 2. In development (NODE_ENV === 'development') without secret → allow with warning.
+ * 3. Otherwise → reject.
  */
 export function validateAdminRequest(req: NextRequest): NextResponse | null {
   const secret = process.env.ADMIN_API_SECRET
 
   if (secret) {
-    const provided = req.headers.get('x-admin-key')
-    if (provided === secret) return null // authorised
+    // Check session cookie (set by /api/auth/admin-login)
+    const token = req.cookies.get('ops-admin-token')?.value
+    if (token === secret) return null // authorised
+
     return NextResponse.json({ error: 'Unauthorised.' }, { status: 401 })
   }
 

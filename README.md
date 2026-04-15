@@ -122,17 +122,20 @@ Full schema: [`schema/001_initial.sql`](./schema/001_initial.sql)
 | `/submit` | Public | Employee submission form (3 types) |
 | `/submit/done` | Public | Confirmation screen |
 | `/updates` | Public | Full "You Said / We Fixed" feed |
-| `/admin` | Admin | Triage board — all submissions |
-| `/admin/[id]` | Admin | Review + score + publish |
-| `/admin/dashboard` | Admin | Analytics dashboard |
-| `/admin/pipeline` | Admin | Execution pipeline tracker |
-| `/admin/pipeline/new` | Admin | Create pipeline item |
+| `/admin/login` | Public | Admin login page |
+| `/admin` | Admin (protected) | Triage board — all submissions |
+| `/admin/[id]` | Admin (protected) | Review + score + publish |
+| `/admin/dashboard` | Admin (protected) | Analytics dashboard |
+| `/admin/pipeline` | Admin (protected) | Execution pipeline tracker |
+| `/admin/pipeline/new` | Admin (protected) | Create pipeline item |
 
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
 | `POST` | `/api/submissions` | Create submission (rate-limited) |
+| `POST` | `/api/auth/admin-login` | Authenticate admin — sets session cookie |
+| `GET/POST` | `/api/auth/admin-logout` | Clear session cookie (GET redirects to login) |
 | `GET` | `/api/admin/submissions/[id]` | Fetch admin board row |
 | `PATCH` | `/api/admin/submissions/[id]` | Upsert review + update status |
 | `POST` | `/api/admin/submissions/[id]/publish` | Publish to feed |
@@ -144,16 +147,36 @@ Full schema: [`schema/001_initial.sql`](./schema/001_initial.sql)
 
 ## Security
 
+### Current Protection (Temporary — Internal Tool)
+
 | Feature | Implementation |
 |---------|---------------|
+| **Admin login gate** | `/admin/login` — password form that authenticates against `ADMIN_API_SECRET` |
+| **Page-level protection** | Next.js middleware redirects all `/admin/*` page visits to login if not authenticated |
+| **API-level protection** | Same middleware rejects all `/api/admin/*` calls with 401 if not authenticated |
+| **Defence-in-depth** | Individual API routes also call `validateAdminRequest()` as a secondary check |
+| **Session cookie** | `ops-admin-token` — HttpOnly, SameSite=Lax, Secure in production, 7-day expiry |
 | **No unsafe fallback** | `supabaseAdmin` throws if `SUPABASE_SERVICE_ROLE_KEY` is missing — never silently falls back to anon key |
-| **Admin route protection** | `validateAdminRequest()` middleware on all `/api/admin/*` routes |
 | **Rate limiting** | 10 submissions per 15 minutes per IP on the public endpoint |
 | **Input validation** | All API routes validate types, ranges, and required fields |
 | **Lazy client init** | Both Supabase clients use `Proxy` to avoid build-time crashes |
 | **RLS enabled** | Row-level security on all tables in the schema |
 
-> **Note:** For production, add proper auth (Supabase Auth, NextAuth, or Vercel Password Protection for admin routes). The current `ADMIN_API_SECRET` header check is a pragmatic first layer for internal use.
+### What This Is NOT
+
+This is **not** a production-grade auth system. Specifically:
+
+- There is **no user management** — a single shared password (`ADMIN_API_SECRET`) grants admin access
+- The session cookie stores a token derived from the secret — it is HttpOnly (not accessible to JS) but not cryptographically signed
+- There is **no role-based access control** — you are either an admin or you are not
+- **Development mode** with no `ADMIN_API_SECRET` set bypasses all protection with a console warning
+
+### Recommended Future Auth
+
+For production hardening, replace the password gate with one of:
+- **Supabase Auth** — email/magic link login with RLS policies
+- **NextAuth.js** — OAuth provider (Google, GitHub) scoped to company domain
+- **Vercel Password Protection** — zero-code page-level auth (Vercel Pro feature)
 
 ---
 
