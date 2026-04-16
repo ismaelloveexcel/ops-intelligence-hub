@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { deriveSessionToken, validateSessionToken } from '@/lib/session-token'
 
 /**
  * Edge middleware — protects all /admin pages and /api/admin API routes.
  *
- * Auth strategy (cookie-based):
- *   1. If ADMIN_API_SECRET is set → require a matching `ops-admin-token` cookie.
+ * Auth strategy (cookie-based with HMAC-derived token):
+ *   1. If ADMIN_API_SECRET is set → require a valid `ops-admin-token` cookie
+ *      containing the HMAC-derived token (not the raw secret).
  *   2. In development with no secret → allow through with a console warning.
  *   3. Otherwise → redirect pages to /admin/login or reject API calls with 401.
  *
@@ -39,7 +41,7 @@ export function middleware(req: NextRequest) {
   // ── Secret configured — check cookie ──────────────────────────────────────
   const token = req.cookies.get('ops-admin-token')?.value
 
-  if (token === secret) {
+  if (token && validateSessionToken(token, secret)) {
     return NextResponse.next()
   }
 

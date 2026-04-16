@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { timingSafeEqual } from 'crypto'
+import { deriveSessionToken } from '@/lib/session-token'
 
 /**
  * POST /api/auth/admin-login
  *
  * Validates the provided password against ADMIN_API_SECRET and sets an
- * HttpOnly session cookie on success.
+ * HttpOnly session cookie containing an HMAC-derived token (not the raw secret).
  */
 export async function POST(req: NextRequest) {
   try {
@@ -32,10 +33,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid password.' }, { status: 401 })
     }
 
-    // Set session cookie
+    // Derive an HMAC token — the raw secret is never stored in the cookie
+    const token = deriveSessionToken(secret)
+
     const response = NextResponse.json({ success: true })
 
-    response.cookies.set('ops-admin-token', secret, {
+    response.cookies.set('ops-admin-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
