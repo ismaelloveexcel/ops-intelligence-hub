@@ -48,27 +48,76 @@ interface PipelineRow {
   created_at: string
 }
 
+const ALLOWED_RANGE_DAYS: Record<string, number> = {
+  '7': 7,
+  '30': 30,
+  '90': 90,
+}
+
+const DEFAULT_RANGE_DAYS = 30
+const MAX_CUSTOM_RANGE_DAYS = 90
+const MS_PER_DAY = 86400000
+
+function parseReportWindow(
+  range: string | null,
+  customFrom: string | null,
+  customTo: string | null
+): { sinceDate: string; untilDate: string; label: string } | { error: string } {
+  const now = new Date()
+  const normalizedRange = range || String(DEFAULT_RANGE_DAYS)
+
+  if (normalizedRange === 'custom') {
+    if (!customFrom || !customTo) {
+      return { error: 'Both "from" and "to" query parameters are required when range=custom.' }
+    }
+
+    const fromDate = new Date(customFrom)
+    const toDate = new Date(customTo + 'T23:59:59Z')
+
+    if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
+      return { error: 'Invalid "from" or "to" date. Use a valid date string when range=custom.' }
+    }
+
+    if (fromDate > toDate) {
+      return { error: '"from" date must be before "to" date.' }
+    }
+
+    const spanMs = toDate.getTime() - fromDate.getTime()
+    if (spanMs > MAX_CUSTOM_RANGE_DAYS * MS_PER_DAY) {
+      return { error: `Custom range cannot exceed ${MAX_CUSTOM_RANGE_DAYS} days.` }
+    }
+
+    return {
+      sinceDate: fromDate.toISOString(),
+      untilDate: toDate.toISOString(),
+      label: `${customFrom} to ${customTo}`,
+    }
+  }
+
+  const days = ALLOWED_RANGE_DAYS[normalizedRange] ?? DEFAULT_RANGE_DAYS
+
+  return {
+    sinceDate: new Date(now.getTime() - days * MS_PER_DAY).toISOString(),
+    untilDate: now.toISOString(),
+    label: `Last ${days} days`,
+  }
+}
+
 export async function GET(req: NextRequest) {
   const authErr = await validateAdminRequest(req)
   if (authErr) return authErr
 
   const { searchParams } = new URL(req.url)
-  const range = searchParams.get('range') || '30'
+  const range = searchParams.get('range')
   const customFrom = searchParams.get('from')
   const customTo = searchParams.get('to')
 
-  let sinceDate: string
-
-  if (range === 'custom' && customFrom) {
-    sinceDate = new Date(customFrom).toISOString()
-  } else {
-    const days = parseInt(range, 10) || 30
-    sinceDate = new Date(Date.now() - days * 86400000).toISOString()
+  const window = parseReportWindow(range, customFrom, customTo)
+  if ('error' in window) {
+    return NextResponse.json({ error: window.error }, { status: 400 })
   }
 
-  const untilDate = (range === 'custom' && customTo)
-    ? new Date(customTo + 'T23:59:59Z').toISOString()
-    : new Date().toISOString()
+  const { sinceDate, untilDate, label } = window
 
   try {
     const [submissionsRes, boardRes, feedRes, pipelineRes] = await Promise.all([
@@ -94,6 +143,26 @@ export async function GET(req: NextRequest) {
         .lte('created_at', untilDate),
     ])
 
+    const queryErrors = [
+      { source: 'submissions', error: submissionsRes.error },
+      { source: 'admin_board', error: boardRes.error },
+      { source: 'feed_items', error: feedRes.error },
+      { source: 'execution_pipeline', error: pipelineRes.error },
+    ].filter(({ error }) => error)
+
+    if (queryErrors.length > 0) {
+      return NextResponse.json(
+        {
+          error: 'Failed to load report data',
+          details: queryErrors.map(({ source, error }) => ({
+            source,
+            message: error?.message ?? 'Unknown Supabase error',
+          })),
+        },
+        { status: 500 }
+      )
+    }
+
     const submissions = (submissionsRes.data ?? []) as SubmissionRow[]
     const board = (boardRes.data ?? []) as BoardRow[]
     const feed = (feedRes.data ?? []) as FeedRow[]
@@ -105,7 +174,7 @@ export async function GET(req: NextRequest) {
     const leadershipUpdate = generateLeadershipUpdate(submissions, board, feed, pipeline)
 
     return NextResponse.json({
-      range: range === 'custom' ? `${customFrom} to ${customTo}` : `Last ${range} days`,
+      range: label,
       weeklySnapshot,
       automationSummary,
       leadershipUpdate,
@@ -141,11 +210,6 @@ function generateWeeklySnapshot(
 
   const deployed = pipeline.filter(p => p.status === 'deployed').length
   const inProgress = pipeline.filter(p => p.status === 'in_progress').length
-
-  const statusCounts: Record<string, number> = {}
-  for (const s of submissions) {
-    statusCounts[s.status] = (statusCounts[s.status] || 0) + 1
-  }
 
   const lines: string[] = []
   lines.push('WEEKLY OPERATIONS SNAPSHOT')

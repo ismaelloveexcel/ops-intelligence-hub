@@ -38,6 +38,7 @@ function CopyButton({ text }: { text: string }) {
 
   return (
     <button
+      type="button"
       onClick={handleCopy}
       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-teal/25 bg-teal/10 text-teal text-xs font-mono hover:bg-teal/20 transition-colors"
     >
