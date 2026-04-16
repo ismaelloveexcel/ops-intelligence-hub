@@ -31,12 +31,16 @@ export interface AuditEntry {
  */
 export async function logAdminAction(entry: AuditEntry): Promise<void> {
   try {
-    await supabaseAdmin.from('admin_audit_log').insert({
+    const { error } = await supabaseAdmin.from('admin_audit_log').insert({
       action: entry.action,
       entity_type: entry.entity_type,
       entity_id: entry.entity_id ?? null,
       summary: entry.summary ?? null,
     })
+
+    if (error) {
+      console.error('[audit-log] Supabase insert error:', error.message)
+    }
   } catch (err) {
     // Non-fatal — log to console but never throw
     console.error('[audit-log] Failed to write audit entry:', err)

@@ -3,6 +3,9 @@ import { timingSafeEqual } from 'crypto'
 import { deriveSessionToken } from '@/lib/session-token'
 import { logAdminAction } from '@/lib/audit-log'
 
+/** Session duration: 7 days in seconds */
+const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7
+
 /**
  * POST /api/auth/admin-login
  *
@@ -44,8 +47,7 @@ export async function POST(req: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      // 7-day session — reasonable for an internal tool
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: SESSION_MAX_AGE_SECONDS,
     })
 
     // Audit log (non-blocking)
