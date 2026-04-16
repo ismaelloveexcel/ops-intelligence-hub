@@ -48,7 +48,7 @@ function actionColor(action: string): string {
   if (action.includes('created')) return 'text-success'
   if (action.includes('deleted')) return 'text-danger'
   if (action.includes('updated') || action.includes('saved')) return 'text-gold'
-  if (action.includes('published')) return 'text-teal'
+  if (action.includes('published')) return 'text-gold'
   if (action.includes('login')) return 'text-blue-teal'
   if (action.includes('logout')) return 'text-white/40'
   return 'text-white/50'
@@ -79,7 +79,7 @@ export default async function AuditLogPage() {
 
       {entries.length === 0 ? (
         <GlassCard className="py-16 text-center">
-          <ScrollText size={36} className="text-teal/40 mx-auto mb-4" />
+          <ScrollText size={36} className="text-gold/40 mx-auto mb-4" />
           <h2 className="text-white/60 font-semibold mb-2">No audit entries</h2>
           <p className="text-white/30 text-sm">
             Actions will appear here as you review submissions and manage the pipeline.

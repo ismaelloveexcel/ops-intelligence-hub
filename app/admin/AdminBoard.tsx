@@ -127,8 +127,8 @@ export default function AdminBoard({ rows }: { rows: AdminBoardRow[] }) {
             onClick={() => setFilterStatus(filterStatus === s ? '' : s)}
             className="text-left"
           >
-            <GlassCard className={`py-3 px-2 text-center transition-colors ${filterStatus === s ? 'border-teal/50' : ''}`}>
-              <div className="text-xl font-bold text-teal">{counts[s]}</div>
+            <GlassCard className={`py-3 px-2 text-center transition-colors ${filterStatus === s ? 'border-gold/50' : ''}`}>
+              <div className="text-xl font-bold text-gold">{counts[s]}</div>
               <div className="text-white/35 text-[10px] font-mono uppercase tracking-widest mt-1">
                 {STATUS_LABELS[s]}
               </div>
@@ -248,7 +248,7 @@ export default function AdminBoard({ rows }: { rows: AdminBoardRow[] }) {
                 type="button"
                 onClick={() => handleSortToggle(field)}
                 className={`px-2 py-1 rounded transition-colors ${
-                  sortField === field ? 'bg-teal/15 text-teal' : 'hover:text-white/60'
+                  sortField === field ? 'bg-gold/15 text-gold' : 'hover:text-white/60'
                 }`}
               >
                 {label} {sortField === field ? (sortAsc ? '↑' : '↓') : ''}
@@ -329,7 +329,7 @@ export default function AdminBoard({ rows }: { rows: AdminBoardRow[] }) {
                       <td>
                         <Link
                           href={`/admin/${row.id}`}
-                          className="inline-flex items-center gap-1 text-teal text-xs font-semibold hover:opacity-75 transition-opacity"
+                          className="inline-flex items-center gap-1 text-gold text-xs font-semibold hover:opacity-75 transition-opacity"
                         >
                           Review <ExternalLink size={11} />
                         </Link>
@@ -387,7 +387,7 @@ export default function AdminBoard({ rows }: { rows: AdminBoardRow[] }) {
                   </div>
                   <Link
                     href={`/admin/${row.id}`}
-                    className="text-teal text-xs font-semibold flex items-center gap-1"
+                    className="text-gold text-xs font-semibold flex items-center gap-1"
                   >
                     Review <ExternalLink size={11} />
                   </Link>

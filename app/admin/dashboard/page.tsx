@@ -151,7 +151,7 @@ export default async function DashboardPage() {
         ].map(({ icon: Icon, value, label }) => (
           <GlassCard key={label} className="stat-card">
             <div className="flex items-center justify-center gap-1 mb-1">
-              <Icon size={16} className="text-teal/60" />
+              <Icon size={16} className="text-gold/60" />
             </div>
             <div className="stat-number">{value}</div>
             <div className="stat-label">{label}</div>
@@ -165,10 +165,10 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-2 gap-3">
           <GlassCard className="px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Eye size={14} className="text-teal/60" />
+              <Eye size={14} className="text-gold/60" />
               <span className="text-white/60 text-sm">Public Items</span>
             </div>
-            <span className="text-teal font-mono font-bold">{data.pipelinePublic}</span>
+            <span className="text-gold font-mono font-bold">{data.pipelinePublic}</span>
           </GlassCard>
           <GlassCard className="px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -184,7 +184,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-8">
         {ALL_STATUSES.map((s) => (
           <GlassCard key={s} className="py-3 px-2 text-center">
-            <div className="text-xl font-bold text-teal">{data.statusCounts[s] ?? 0}</div>
+            <div className="text-xl font-bold text-gold">{data.statusCounts[s] ?? 0}</div>
             <div className="text-white/35 text-[10px] font-mono uppercase tracking-widest mt-1">
               {STATUS_LABELS[s]}
             </div>
@@ -203,7 +203,7 @@ export default async function DashboardPage() {
                 <span className="text-white/60 text-sm">
                   {DEPARTMENT_LABELS[dept as Department] ?? dept}
                 </span>
-                <span className="text-teal font-mono font-bold">{count}</span>
+                <span className="text-gold font-mono font-bold">{count}</span>
               </GlassCard>
             ))}
         </div>
@@ -225,7 +225,7 @@ export default async function DashboardPage() {
             <div className="flex flex-col gap-2">
               {data.topBottlenecks.map((item) => (
                 <Link key={item.id} href={`/admin/${item.id}`}>
-                  <GlassCard className="p-4 hover:border-teal/25 transition-colors">
+                  <GlassCard className="p-4 hover:border-gold/25 transition-colors">
                     <p className="text-white/80 text-sm line-clamp-2 mb-2">{item.description}</p>
                     <div className="flex gap-3 text-xs font-mono">
                       {item.hours_wasted_month != null && (
@@ -256,10 +256,10 @@ export default async function DashboardPage() {
             <div className="flex flex-col gap-2">
               {data.quickWins.map((item) => (
                 <Link key={item.id} href={`/admin/${item.id}`}>
-                  <GlassCard className="p-4 hover:border-teal/25 transition-colors">
+                  <GlassCard className="p-4 hover:border-gold/25 transition-colors">
                     <p className="text-white/80 text-sm line-clamp-2 mb-2">{item.description}</p>
                     <div className="flex gap-3 text-xs font-mono">
-                      <span className="text-teal">Auto: {item.automation_potential}/5</span>
+                      <span className="text-gold">Auto: {item.automation_potential}/5</span>
                       <span className="text-success">Effort: Quick</span>
                     </div>
                   </GlassCard>

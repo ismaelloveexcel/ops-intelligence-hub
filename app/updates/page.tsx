@@ -68,7 +68,7 @@ export default async function UpdatesPage() {
       {feed.length === 0 ? (
         /* Empty state */
         <GlassCard className="py-16 text-center">
-          <Megaphone size={36} className="text-teal/40 mx-auto mb-4" />
+          <Megaphone size={36} className="text-gold/40 mx-auto mb-4" />
           <h2 className="text-white/60 font-semibold mb-2">Nothing published yet</h2>
           <p className="text-white/30 text-sm mb-6">
             Fixes will appear here once the admin publishes them.
@@ -84,7 +84,7 @@ export default async function UpdatesPage() {
           <div className="flex items-center gap-3 mb-6">
             <GlassCard className="px-4 py-2.5 inline-flex items-center gap-2">
               <ImpactDot size="sm" />
-              <span className="text-teal font-mono font-bold text-sm">{feed.length}</span>
+              <span className="text-gold font-mono font-bold text-sm">{feed.length}</span>
               <span className="text-white/40 text-xs font-mono uppercase tracking-widest">
                 fixes shipped
               </span>
@@ -98,7 +98,7 @@ export default async function UpdatesPage() {
                 {/* Month label */}
                 <div className="flex items-center gap-3 mb-4">
                   <span className="mono-label">{month}</span>
-                  <div className="flex-1 h-px bg-teal/10" />
+                  <div className="flex-1 h-px bg-gold/10" />
                   <span className="text-white/25 text-xs font-mono">
                     {grouped[month].length} fix{grouped[month].length !== 1 ? 'es' : ''}
                   </span>
@@ -107,7 +107,7 @@ export default async function UpdatesPage() {
                 {/* Cards */}
                 <div className="flex flex-col gap-3">
                   {grouped[month].map((item) => (
-                    <GlassCard key={item.id} className="p-5 hover:border-teal/25 transition-colors">
+                    <GlassCard key={item.id} className="p-5 hover:border-gold/25 transition-colors">
                       <div className="flex items-start justify-between gap-3 mb-3">
                         <div className="flex items-center gap-2 flex-wrap">
                           <ImpactDot size="sm" />
@@ -128,7 +128,7 @@ export default async function UpdatesPage() {
                       </h2>
 
                       <div className="mb-2">
-                        <p className="text-teal/60 text-[10px] font-mono uppercase tracking-widest mb-0.5">Action Taken</p>
+                        <p className="text-gold/60 text-[10px] font-mono uppercase tracking-widest mb-0.5">Action Taken</p>
                         <p className="text-white/55 text-sm leading-relaxed">
                           {item.what_changed}
                         </p>

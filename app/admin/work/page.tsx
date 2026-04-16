@@ -68,7 +68,7 @@ export default async function ActiveWorkPage() {
 
       {items.length === 0 ? (
         <GlassCard className="py-16 text-center">
-          <Briefcase size={36} className="text-teal/40 mx-auto mb-4" />
+          <Briefcase size={36} className="text-gold/40 mx-auto mb-4" />
           <h2 className="text-white/60 font-semibold mb-2">No active work</h2>
           <p className="text-white/30 text-sm mb-6">
             Nothing is currently in progress or testing. Check the pipeline for planned items.
@@ -80,7 +80,7 @@ export default async function ActiveWorkPage() {
       ) : (
         <div className="flex flex-col gap-3">
           {items.map((item) => (
-            <GlassCard key={item.id} className="p-5 hover:border-teal/25 transition-colors">
+            <GlassCard key={item.id} className="p-5 hover:border-gold/25 transition-colors">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div>
                   <h3 className="text-white font-semibold text-sm">{item.title}</h3>
@@ -98,7 +98,7 @@ export default async function ActiveWorkPage() {
                 {item.linked_submission_id && (
                   <Link
                     href={`/admin/${item.linked_submission_id}`}
-                    className="text-teal hover:underline"
+                    className="text-gold hover:underline"
                   >
                     View Submission →
                   </Link>

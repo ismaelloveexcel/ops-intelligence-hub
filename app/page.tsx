@@ -68,7 +68,7 @@ export default async function HomePage() {
         <p className="mono-label mb-3">Operations Intelligence Hub</p>
         <h1 className="text-3xl font-bold tracking-tight leading-tight mb-3">
           From Feedback{' '}
-          <span className="teal-gradient-text">to Action.</span>
+          <span className="gold-gradient-text">to Action.</span>
         </h1>
         <p className="text-white/55 text-base leading-relaxed max-w-sm">
           A living record of operational improvements — driven by your submissions.
@@ -101,7 +101,7 @@ export default async function HomePage() {
           <p className="mono-label">Recent Fixes</p>
           <Link
             href="/updates"
-            className="text-teal text-sm font-medium flex items-center gap-1 hover:opacity-80 transition-opacity"
+            className="text-gold text-sm font-medium flex items-center gap-1 hover:opacity-80 transition-opacity"
           >
             View all <ArrowRight size={14} />
           </Link>
@@ -132,7 +132,7 @@ export default async function HomePage() {
                 <h3 className="text-white font-semibold text-sm leading-snug mb-1">
                   {item.title}
                 </h3>
-                <p className="text-teal/50 text-[10px] font-mono uppercase tracking-widest mb-0.5">Action Taken</p>
+                <p className="text-gold/50 text-[10px] font-mono uppercase tracking-widest mb-0.5">Action Taken</p>
                 <p className="text-white/50 text-sm leading-relaxed line-clamp-2">
                   {item.what_changed}
                 </p>
@@ -160,7 +160,7 @@ export default async function HomePage() {
       <div className="sm:hidden fixed bottom-20 right-5 z-50">
         <Link
           href="/submit"
-          className="btn-primary rounded-full w-14 h-14 p-0 shadow-teal-glow"
+          className="btn-primary rounded-full w-14 h-14 p-0 shadow-gold-glow"
           aria-label="Report an issue"
         >
           <Plus size={22} />

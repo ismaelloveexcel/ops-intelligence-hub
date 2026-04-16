@@ -59,7 +59,7 @@ export default function AdminLoginPage() {
             <ShieldAlert size={28} className="text-danger mx-auto mb-3" />
             <h2 className="text-white font-semibold mb-2">Admin Not Configured</h2>
             <p className="text-white/50 text-sm leading-relaxed">
-              The <code className="text-teal text-xs">ADMIN_API_SECRET</code> environment
+              The <code className="text-gold text-xs">ADMIN_API_SECRET</code> environment
               variable is not set. Admin access is disabled until it is configured.
             </p>
           </GlassCard>

@@ -28,11 +28,11 @@ export default function BottomNav() {
             <div className="bottom-nav-icon-wrap">
               <Icon
                 size={20}
-                className={isActive ? 'text-teal' : 'text-white/40'}
+                className={isActive ? 'text-gold' : 'text-white/40'}
                 strokeWidth={isActive ? 2.5 : 1.75}
               />
             </div>
-            <span className={`bottom-nav-label ${isActive ? 'text-teal' : 'text-white/40'}`}>
+            <span className={`bottom-nav-label ${isActive ? 'text-gold' : 'text-white/40'}`}>
               {label}
             </span>
             {isActive && <span className="bottom-nav-dot" />}

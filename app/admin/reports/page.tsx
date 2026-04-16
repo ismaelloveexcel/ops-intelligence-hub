@@ -40,7 +40,7 @@ function CopyButton({ text }: { text: string }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-teal/25 bg-teal/10 text-teal text-xs font-mono hover:bg-teal/20 transition-colors"
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gold/25 bg-gold/10 text-gold text-xs font-mono hover:bg-gold/20 transition-colors"
     >
       {copied ? (
         <>
@@ -140,7 +140,7 @@ export default function ReportsPage() {
               onClick={() => setRange(value)}
               className={`px-4 py-2 rounded-lg border text-sm font-mono transition-colors ${
                 range === value
-                  ? 'border-teal/40 bg-teal/15 text-teal'
+                  ? 'border-gold/40 bg-gold/15 text-gold'
                   : 'border-white/10 bg-white/5 text-white/40 hover:border-white/20'
               }`}
             >

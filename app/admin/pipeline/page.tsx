@@ -66,7 +66,7 @@ export default async function PipelinePage() {
       {/* Stats row */}
       <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-8">
         <GlassCard className="stat-card">
-          <Rocket size={16} className="text-teal/60 mx-auto mb-1" />
+          <Rocket size={16} className="text-gold/60 mx-auto mb-1" />
           <div className="stat-number">{deployed.length}</div>
           <div className="stat-label">Deployed</div>
         </GlassCard>
@@ -81,7 +81,7 @@ export default async function PipelinePage() {
           <div className="stat-label">Hours Saved</div>
         </GlassCard>
         <GlassCard className="stat-card">
-          <Eye size={16} className="text-teal/60 mx-auto mb-1" />
+          <Eye size={16} className="text-gold/60 mx-auto mb-1" />
           <div className="stat-number">{publicCount}</div>
           <div className="stat-label">Public</div>
         </GlassCard>
@@ -95,7 +95,7 @@ export default async function PipelinePage() {
       {/* Pipeline items */}
       {items.length === 0 ? (
         <GlassCard className="py-16 text-center">
-          <Rocket size={36} className="text-teal/40 mx-auto mb-4" />
+          <Rocket size={36} className="text-gold/40 mx-auto mb-4" />
           <h2 className="text-white/60 font-semibold mb-2">No pipeline items yet</h2>
           <p className="text-white/30 text-sm mb-6">
             Start tracking your automation builds and deployments.
@@ -107,7 +107,7 @@ export default async function PipelinePage() {
       ) : (
         <div className="flex flex-col gap-3">
           {items.map((item) => (
-            <GlassCard key={item.id} className="p-5 hover:border-teal/25 transition-colors">
+            <GlassCard key={item.id} className="p-5 hover:border-gold/25 transition-colors">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div>
                   <h3 className="text-white font-semibold text-sm">{item.title}</h3>
@@ -120,7 +120,7 @@ export default async function PipelinePage() {
                 </span>
                 <span className={`inline-flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded-full border ${
                   (item.visibility as Visibility) === 'public'
-                    ? 'border-teal/25 bg-teal/10 text-teal'
+                    ? 'border-gold/25 bg-gold/10 text-gold'
                     : 'border-white/15 bg-white/5 text-white/40'
                 }`}>
                   {(item.visibility as Visibility) === 'public' ? <Eye size={11} /> : <EyeOff size={11} />}
@@ -143,7 +143,7 @@ export default async function PipelinePage() {
                     href={item.deployed_link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-teal hover:underline"
+                    className="text-gold hover:underline"
                   >
                     View →
                   </a>

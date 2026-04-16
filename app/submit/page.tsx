@@ -188,7 +188,7 @@ export default function SubmitPage() {
               <span className="text-sm text-white/70">
                 {isAnonymous ? (
                   <span>
-                    Submitting <span className="text-teal font-semibold">anonymously</span>
+                    Submitting <span className="text-gold font-semibold">anonymously</span>
                   </span>
                 ) : (
                   'Submit anonymously'
@@ -357,7 +357,7 @@ export default function SubmitPage() {
                       type="checkbox"
                       checked={value}
                       onChange={(e) => set(e.target.checked)}
-                      className="w-4 h-4 rounded border-teal/30 bg-navy-800 text-teal focus:ring-teal/30"
+                      className="w-4 h-4 rounded border-gold/30 bg-navy-800 text-gold focus:ring-gold/30"
                     />
                     <span className="text-white/60 text-sm">{label}</span>
                   </label>
