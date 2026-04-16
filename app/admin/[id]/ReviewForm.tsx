@@ -481,7 +481,7 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
         <div className="flex flex-col gap-1.5 mb-5">
           <div className="flex items-center gap-2">
             <label className="mono-label">Private Notes to Self</label>
-            <span className="text-white/25 text-[10px] font-mono border border-white/10 rounded px-1.5 py-0.5">OPERATOR ONLY</span>
+            <span className="text-white/40 text-[10px] font-mono border border-white/10 rounded px-1.5 py-0.5">OPERATOR ONLY</span>
           </div>
           <textarea
             value={adminNotes}

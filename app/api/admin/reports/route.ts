@@ -57,6 +57,10 @@ const ALLOWED_RANGE_DAYS: Record<string, number> = {
 const DEFAULT_RANGE_DAYS = 30
 const MAX_CUSTOM_RANGE_DAYS = 90
 const MS_PER_DAY = 86400000
+const DESC_MAX_LEN = 80
+const DESC_TRUNCATE_AT = 77
+const DESC_SHORT_MAX = 70
+const DESC_SHORT_TRUNCATE = 67
 
 function parseReportWindow(
   range: string | null,
@@ -235,7 +239,7 @@ function generateWeeklySnapshot(
     .slice(0, 3)
   if (topBottlenecks.length > 0) {
     for (const b of topBottlenecks) {
-      const desc = b.description.length > 80 ? b.description.slice(0, 77) + '…' : b.description
+      const desc = b.description.length > DESC_MAX_LEN ? b.description.slice(0, DESC_TRUNCATE_AT) + '…' : b.description
       lines.push(`  • ${desc} — ${(b.hours_wasted_month ?? 0).toFixed(1)}h/mo`)
     }
   } else {
@@ -277,7 +281,7 @@ function generateWeeklySnapshot(
     .slice(0, 3)
   if (pending.length > 0) {
     for (const p of pending) {
-      const desc = p.description.length > 80 ? p.description.slice(0, 77) + '…' : p.description
+      const desc = p.description.length > DESC_MAX_LEN ? p.description.slice(0, DESC_TRUNCATE_AT) + '…' : p.description
       lines.push(`  • ${desc}`)
     }
   } else {
@@ -319,7 +323,7 @@ function generateAutomationSummary(
   lines.push('HIGH POTENTIAL ITEMS')
   if (highPotential.length > 0) {
     for (const h of highPotential.slice(0, 5)) {
-      const desc = h.description.length > 70 ? h.description.slice(0, 67) + '…' : h.description
+      const desc = h.description.length > DESC_SHORT_MAX ? h.description.slice(0, DESC_SHORT_TRUNCATE) + '…' : h.description
       lines.push(`  • ${desc} — potential: ${h.automation_potential}/5`)
     }
   } else {
@@ -363,7 +367,7 @@ function generateAutomationSummary(
   if (quickWins.length > 0) {
     lines.push('  Quick wins to action:')
     for (const q of quickWins.slice(0, 3)) {
-      const desc = q.description.length > 70 ? q.description.slice(0, 67) + '…' : q.description
+      const desc = q.description.length > DESC_SHORT_MAX ? q.description.slice(0, DESC_SHORT_TRUNCATE) + '…' : q.description
       lines.push(`    → ${desc}`)
     }
   }
@@ -414,7 +418,7 @@ function generateLeadershipUpdate(
   if (topIssues.length > 0) {
     for (const t of topIssues) {
       const process = t.process_name ? ` (${t.process_name})` : ''
-      const desc = t.description.length > 70 ? t.description.slice(0, 67) + '…' : t.description
+      const desc = t.description.length > DESC_SHORT_MAX ? t.description.slice(0, DESC_SHORT_TRUNCATE) + '…' : t.description
       lines.push(`  • ${desc}${process}`)
     }
   }
@@ -454,7 +458,7 @@ function generateLeadershipUpdate(
     .slice(0, 3)
   if (upcoming.length > 0) {
     for (const u of upcoming) {
-      const desc = u.description.length > 70 ? u.description.slice(0, 67) + '…' : u.description
+      const desc = u.description.length > DESC_SHORT_MAX ? u.description.slice(0, DESC_SHORT_TRUNCATE) + '…' : u.description
       lines.push(`  • ${desc}`)
     }
   } else {

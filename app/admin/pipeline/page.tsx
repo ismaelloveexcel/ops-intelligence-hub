@@ -60,7 +60,7 @@ export default async function PipelinePage() {
           <Link href="/admin/pipeline/new" className="btn-primary text-sm py-2.5 px-4">
             <Plus size={15} /> Add Item
           </Link>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gold/25 bg-gold/8 text-gold text-xs font-mono">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gold/25 bg-gold/[0.08] text-gold text-xs font-mono">
             <ShieldAlert size={13} />
             Admin
           </div>
