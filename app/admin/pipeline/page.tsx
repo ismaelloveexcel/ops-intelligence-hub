@@ -2,7 +2,7 @@ import GlassCard from '@/components/GlassCard'
 import ImpactDot from '@/components/ImpactDot'
 import { supabaseAdmin } from '@/lib/supabase'
 import { ExecutionPipelineItem, EXECUTION_STATUS_LABELS, ExecutionStatus, Visibility } from '@/lib/types'
-import { ShieldAlert, Plus, Rocket, Clock, CheckCircle, Eye, EyeOff } from 'lucide-react'
+import { ShieldAlert, Plus, Rocket, Clock, CheckCircle, Eye, EyeOff, Star } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -38,6 +38,10 @@ export default async function PipelinePage() {
   const privateCount = items.filter((i) => i.visibility === 'private').length
   const publicCount = items.filter((i) => i.visibility === 'public').length
 
+  const readyToShow = items.filter(
+    (i) => (i.visibility as Visibility) === 'private' && i.status === 'deployed'
+  )
+
   return (
     <main className="min-h-screen px-4 pt-10 pb-10 max-w-5xl mx-auto">
       {/* Header */}
@@ -64,7 +68,7 @@ export default async function PipelinePage() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-8">
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-8">
         <GlassCard className="stat-card">
           <Rocket size={16} className="text-gold/60 mx-auto mb-1" />
           <div className="stat-number">{deployed.length}</div>
@@ -90,7 +94,40 @@ export default async function PipelinePage() {
           <div className="stat-number">{privateCount}</div>
           <div className="stat-label">Private</div>
         </GlassCard>
+        <GlassCard className="stat-card">
+          <Star size={16} className="text-gold/60 mx-auto mb-1" />
+          <div className="stat-number">{readyToShow.length}</div>
+          <div className="stat-label">Ready to Show</div>
+        </GlassCard>
       </div>
+
+      {/* Ready to Show Section */}
+      {readyToShow.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Star size={14} className="text-gold" />
+            <p className="mono-label">Ready to Show</p>
+            <span className="ml-auto text-white/30 text-xs font-mono">
+              Private + Deployed — flip to public to publish
+            </span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {readyToShow.map((item) => (
+              <GlassCard key={item.id} className="p-4 border-gold/20">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-white font-semibold text-sm">{item.title}</h3>
+                    {item.tool_used && (
+                      <span className="text-white/40 text-xs">Tool: {item.tool_used}</span>
+                    )}
+                  </div>
+                  <span className="badge badge-ready badge-sm">Ready</span>
+                </div>
+              </GlassCard>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Pipeline items */}
       {items.length === 0 ? (
