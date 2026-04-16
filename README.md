@@ -1,22 +1,23 @@
-# Ops Intelligence Hub
+# Operations Intelligence Hub
 
-> **Internal operating system for the AI & Automation Lead at ARIE Finance.**
-> This is NOT a public SaaS product. It is a focused internal tool designed to help the AI & Automation Lead integrate into the company quickly, identify operational bottlenecks, capture employee suggestions, prioritise automation opportunities, track execution, and prove impact.
+> **Making Work Easier — an internal system for capturing operational improvements at ARIE Finance.**
+> Employees share what slows them down, and the operations team turns that feedback into real improvements. The aim is to reduce unnecessary steps and make day-to-day work smoother.
 
 ---
 
 ## What This Is
 
-Ops Intelligence Hub is the central control panel for:
+Operations Intelligence Hub is a central system for:
 
-- **Employee suggestions** — anyone in the company can report a problem, suggest an improvement, or share a quick idea
-- **Operational pain points** — structured capture of what's slow, manual, or error-prone
-- **Automation prioritisation** — scoring system that surfaces the biggest bottlenecks and easiest quick wins
+- **Employee feedback** — anyone in the company can share what takes too long, feels repetitive, or could be simpler
+- **Operational improvements** — structured capture of bottlenecks and inefficiencies
+- **Automation prioritisation** — scoring system that surfaces the biggest problems and quickest wins
 - **Execution tracking** — pipeline view of what's being built and deployed
 - **Impact measurement** — hours wasted vs hours saved, before/after comparisons
-- **"You Said / We Fixed" feed** — visible proof that employee input leads to real change
+- **"From Feedback to Action" feed** — visible proof that employee input leads to real change
+- **Management reporting** — structured reports for leadership updates
 
-The goal: **look effective early, move fast, show results.**
+The goal: **identify problems, fix them, and show the results.**
 
 ---
 
@@ -33,7 +34,7 @@ The goal: **look effective early, move fast, show results.**
 ## Product Modules
 
 ### 1. Submissions (`/submit`)
-Employee-facing form branded as **"Improve Our Work"**. Supports three types:
+Employee-facing form branded as **"Making Work Easier"**. Supports three types:
 - **Problem** — full structured form with process name, system, time metrics, frustration level, risk flags
 - **Suggestion** — structured improvement proposal
 - **Quick Idea** — lightweight, just department + description
@@ -65,7 +66,7 @@ Internal analytics:
 - **Quick wins** (high automation potential + quick effort)
 
 ### 5. Public Feed (`/updates`)
-"You Said → We Fixed" with:
+"From Feedback to Action" with:
 - Hours saved badges
 - Before vs after summaries
 - Monthly grouping
@@ -76,7 +77,7 @@ Internal analytics:
 
 ```
 Employee submits → Admin reviews & scores → Priority list generated →
-Build/deploy tracked in pipeline → Published to "You Said / We Fixed" →
+Build/deploy tracked in pipeline → Published to "From Feedback to Action" →
 Employees see impact → More submissions → Cycle continues
 ```
 
@@ -106,7 +107,7 @@ Full schema: [`schema/001_initial.sql`](./schema/001_initial.sql), [`schema/002_
 |-------|---------|
 | `submissions` | Employee submissions with structured fields |
 | `review_actions` | Admin review scoring (1:1 with submissions) |
-| `feed_items` | Published "You Said / We Fixed" entries (with visibility control) |
+| `feed_items` | Published "From Feedback to Action" entries (with visibility control) |
 | `execution_pipeline` | Delivery tracking items (with visibility control) |
 | `admin_audit_log` | Audit trail for admin actions (review, publish, pipeline CRUD, login/logout) |
 
@@ -124,13 +125,14 @@ Full schema: [`schema/001_initial.sql`](./schema/001_initial.sql), [`schema/002_
 | `/` | Public | Homepage — stats + recent fixes |
 | `/submit` | Public | Employee submission form (3 types) |
 | `/submit/done` | Public | Confirmation screen |
-| `/updates` | Public | Full "You Said / We Fixed" feed |
+| `/updates` | Public | Full "From Feedback to Action" feed |
 | `/admin/login` | Public | Admin login page |
 | `/admin` | Admin (protected) | Triage board — all submissions |
 | `/admin/[id]` | Admin (protected) | Review + score + publish |
 | `/admin/dashboard` | Admin (protected) | Analytics dashboard |
 | `/admin/pipeline` | Admin (protected) | Execution pipeline tracker |
 | `/admin/pipeline/new` | Admin (protected) | Create pipeline item |
+| `/admin/reports` | Admin (protected) | Management report generation |
 
 ## API Endpoints
 
@@ -143,6 +145,7 @@ Full schema: [`schema/001_initial.sql`](./schema/001_initial.sql), [`schema/002_
 | `PATCH` | `/api/admin/submissions/[id]` | Upsert review + update status |
 | `POST` | `/api/admin/submissions/[id]/publish` | Publish to feed |
 | `GET` | `/api/admin/dashboard` | Dashboard metrics |
+| `GET` | `/api/admin/reports` | Generate management reports |
 | `GET/POST` | `/api/admin/pipeline` | List/create pipeline items |
 | `PATCH/DELETE` | `/api/admin/pipeline/[id]` | Update/delete pipeline item |
 

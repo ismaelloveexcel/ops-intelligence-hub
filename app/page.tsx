@@ -67,8 +67,8 @@ export default async function HomePage() {
       <section className="px-5 pt-12 pb-8 max-w-2xl mx-auto">
         <p className="mono-label mb-3">Operations Intelligence Hub</p>
         <h1 className="text-3xl font-bold tracking-tight leading-tight mb-3">
-          You Said.{' '}
-          <span className="teal-gradient-text">We Fixed.</span>
+          From Feedback{' '}
+          <span className="teal-gradient-text">to Action.</span>
         </h1>
         <p className="text-white/55 text-base leading-relaxed max-w-sm">
           A living record of operational improvements — driven by your submissions.
@@ -132,6 +132,7 @@ export default async function HomePage() {
                 <h3 className="text-white font-semibold text-sm leading-snug mb-1">
                   {item.title}
                 </h3>
+                <p className="text-teal/50 text-[10px] font-mono uppercase tracking-widest mb-0.5">Action Taken</p>
                 <p className="text-white/50 text-sm leading-relaxed line-clamp-2">
                   {item.what_changed}
                 </p>
