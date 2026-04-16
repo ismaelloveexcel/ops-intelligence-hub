@@ -14,7 +14,7 @@ export async function POST(
 
   try {
     const body = await req.json()
-    const { title, what_changed, hours_saved, before_summary, after_summary } = body
+    const { title, what_changed, hours_saved, before_summary, after_summary, visibility } = body
 
     if (!title || typeof title !== 'string' || title.trim().length === 0) {
       return NextResponse.json({ error: 'Title is required.' }, { status: 400 })
@@ -34,6 +34,12 @@ export async function POST(
       return NextResponse.json({ error: 'Submission not found.' }, { status: 404 })
     }
 
+    // Validate visibility
+    const feedVisibility = visibility || 'private'
+    if (!['private', 'public'].includes(feedVisibility)) {
+      return NextResponse.json({ error: 'Invalid visibility.' }, { status: 400 })
+    }
+
     // Insert feed item
     const { error: feedError } = await supabaseAdmin.from('feed_items').insert({
       submission_id: params.id,
@@ -44,6 +50,7 @@ export async function POST(
       hours_saved: hours_saved ?? null,
       before_summary: before_summary?.trim() || null,
       after_summary: after_summary?.trim() || null,
+      visibility: feedVisibility,
     })
 
     if (feedError) {
