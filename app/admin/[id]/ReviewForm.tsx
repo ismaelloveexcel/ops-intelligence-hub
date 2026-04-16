@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import GlassCard from '@/components/GlassCard'
 import { StatusBadge, ImpactBadge, DeptBadge } from '@/components/StatusBadge'
 import ImpactDot from '@/components/ImpactDot'
@@ -616,7 +617,7 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
         <p className="text-white/45 text-xs mb-4 leading-relaxed">
           Create a pipeline item from this submission to track its implementation.
         </p>
-        <a
+        <Link
           href={`/admin/pipeline/new?${new URLSearchParams({
             linked_submission_id: row.id,
             title: row.process_name
@@ -638,7 +639,7 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
           className="btn-primary inline-flex"
         >
           <Rocket size={15} /> Create Execution Task
-        </a>
+        </Link>
       </GlassCard>
     </div>
   )

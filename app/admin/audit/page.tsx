@@ -16,13 +16,20 @@ interface AuditLogEntry {
 
 async function getAuditLog(): Promise<AuditLogEntry[]> {
   try {
-    const { data } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from('admin_audit_log')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(50)
+
+    if (error) {
+      console.error('Failed to load admin audit log:', error)
+      return []
+    }
+
     return (data ?? []) as AuditLogEntry[]
-  } catch {
+  } catch (error) {
+    console.error('Unexpected error while loading admin audit log:', error)
     return []
   }
 }

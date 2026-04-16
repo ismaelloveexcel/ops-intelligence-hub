@@ -87,14 +87,22 @@ export default function AdminBoard({ rows }: { rows: AdminBoardRow[] }) {
     return result
   }, [rows, search, filterStatus, filterDept, filterType, quickWinOnly, highPriorityOnly, sortField, sortAsc])
 
-  // Status counts (from full rows, not filtered)
-  const counts = ALL_STATUSES.reduce<Record<SubmissionStatus, number>>(
-    (acc, s) => {
-      acc[s] = rows.filter((r) => r.status === s).length
-      return acc
-    },
-    {} as Record<SubmissionStatus, number>
-  )
+  // Status counts (from full rows, not filtered) — single-pass for efficiency
+  const counts = useMemo(() => {
+    const initialCounts = ALL_STATUSES.reduce<Record<SubmissionStatus, number>>(
+      (acc, s) => {
+        acc[s] = 0
+        return acc
+      },
+      {} as Record<SubmissionStatus, number>
+    )
+
+    for (const row of rows) {
+      initialCounts[row.status] += 1
+    }
+
+    return initialCounts
+  }, [rows])
 
   function handleSortToggle(field: SortField) {
     if (sortField === field) {
@@ -115,6 +123,7 @@ export default function AdminBoard({ rows }: { rows: AdminBoardRow[] }) {
           <button
             key={s}
             type="button"
+            aria-pressed={filterStatus === s}
             onClick={() => setFilterStatus(filterStatus === s ? '' : s)}
             className="text-left"
           >
@@ -181,6 +190,7 @@ export default function AdminBoard({ rows }: { rows: AdminBoardRow[] }) {
             {/* Quick Win toggle */}
             <button
               type="button"
+              aria-pressed={quickWinOnly}
               onClick={() => setQuickWinOnly(!quickWinOnly)}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-mono transition-colors ${
                 quickWinOnly
@@ -195,6 +205,7 @@ export default function AdminBoard({ rows }: { rows: AdminBoardRow[] }) {
             {/* High priority toggle */}
             <button
               type="button"
+              aria-pressed={highPriorityOnly}
               onClick={() => setHighPriorityOnly(!highPriorityOnly)}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-mono transition-colors ${
                 highPriorityOnly

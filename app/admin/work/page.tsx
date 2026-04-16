@@ -9,13 +9,20 @@ export const dynamic = 'force-dynamic'
 
 async function getActiveWork(): Promise<ExecutionPipelineItem[]> {
   try {
-    const { data } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from('execution_pipeline')
       .select('*')
       .in('status', ['in_progress', 'testing'])
       .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Failed to fetch active work from execution_pipeline:', error)
+      return []
+    }
+
     return (data ?? []) as ExecutionPipelineItem[]
-  } catch {
+  } catch (error) {
+    console.error('Unexpected error while fetching active work:', error)
     return []
   }
 }
