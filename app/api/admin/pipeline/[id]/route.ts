@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import { logAdminAction } from '@/lib/audit-log'
-import { ExecutionStatus } from '@/lib/types'
+import { ExecutionStatus, Visibility } from '@/lib/types'
 
 const VALID_STATUSES: ExecutionStatus[] = ['planned', 'in_progress', 'testing', 'deployed', 'cancelled']
+const VALID_VISIBILITIES: Visibility[] = ['private', 'public']
 
 export async function PATCH(
   req: NextRequest,
@@ -33,6 +34,13 @@ export async function PATCH(
     if (body.after_time !== undefined) { updates.after_time = body.after_time; changes.push('after_time') }
     if (body.actual_hours_saved !== undefined) { updates.actual_hours_saved = body.actual_hours_saved; changes.push('actual_hours_saved') }
     if (body.notes !== undefined) { updates.notes = body.notes?.trim() || null; changes.push('notes') }
+    if (body.visibility !== undefined) {
+      if (!VALID_VISIBILITIES.includes(body.visibility)) {
+        return NextResponse.json({ error: 'Invalid visibility.' }, { status: 400 })
+      }
+      updates.visibility = body.visibility
+      changes.push(`visibility → ${body.visibility}`)
+    }
 
     if (changes.length === 0) {
       return NextResponse.json(

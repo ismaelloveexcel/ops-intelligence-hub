@@ -100,14 +100,14 @@ This surfaces items that are **frequent, painful, and automatable**.
 
 ## Data Model
 
-Full schema: [`schema/001_initial.sql`](./schema/001_initial.sql), [`schema/002_audit_log.sql`](./schema/002_audit_log.sql)
+Full schema: [`schema/001_initial.sql`](./schema/001_initial.sql), [`schema/002_audit_log.sql`](./schema/002_audit_log.sql), [`schema/003_visibility.sql`](./schema/003_visibility.sql)
 
 | Table | Purpose |
 |-------|---------|
 | `submissions` | Employee submissions with structured fields |
 | `review_actions` | Admin review scoring (1:1 with submissions) |
-| `feed_items` | Published "You Said / We Fixed" entries |
-| `execution_pipeline` | Delivery tracking items |
+| `feed_items` | Published "You Said / We Fixed" entries (with visibility control) |
+| `execution_pipeline` | Delivery tracking items (with visibility control) |
 | `admin_audit_log` | Audit trail for admin actions (review, publish, pipeline CRUD, login/logout) |
 
 | View | Purpose |
@@ -207,7 +207,7 @@ npm install
 ```
 
 ### 2. Supabase
-Create a project at [supabase.com](https://supabase.com). Run [`schema/001_initial.sql`](./schema/001_initial.sql) and [`schema/002_audit_log.sql`](./schema/002_audit_log.sql) in the SQL editor.
+Create a project at [supabase.com](https://supabase.com). Run [`schema/001_initial.sql`](./schema/001_initial.sql), [`schema/002_audit_log.sql`](./schema/002_audit_log.sql), and [`schema/003_visibility.sql`](./schema/003_visibility.sql) in the SQL editor.
 
 ### 3. Environment
 Copy `.env.local.example` → `.env.local` and fill in:
@@ -267,6 +267,54 @@ The tool does NOT perform the automation itself — it helps **identify, priorit
 - **Styling:** Tailwind CSS + custom glassmorphic CSS
 - **Email:** Resend (optional)
 - **Deployment:** Vercel
+
+---
+
+## Visibility Control (Private Mode)
+
+The system includes a lightweight visibility layer that allows the operator to prepare work privately before revealing it to management or public-facing surfaces.
+
+### Model
+
+Every `execution_pipeline` item and `feed_items` entry has a `visibility` field with two values:
+
+| Value | Meaning |
+|-------|---------|
+| `private` | Visible only in admin/operator views. Hidden from homepage, `/updates` feed, and any public-facing surface. |
+| `public` | Visible everywhere — including the homepage "Recent Fixes", `/updates` feed, and management-facing dashboards. |
+
+**Default:** `private` — all new pipeline items and feed entries start as private for safety.
+
+### What respects visibility
+
+| Surface | Behaviour |
+|---------|-----------|
+| Homepage recent fixes (`/`) | Shows only `public` feed items |
+| Updates feed (`/updates`) | Shows only `public` feed items |
+| Admin pipeline (`/admin/pipeline`) | Shows **all** items with visibility badge |
+| Admin dashboard (`/admin/dashboard`) | Shows all items + public/private breakdown |
+| Pipeline create/edit forms | Include visibility selector |
+| Publish-to-feed form (`/admin/[id]`) | Includes visibility selector |
+| Dashboard API (`/api/admin/dashboard`) | Returns both total and public-only stats |
+
+### Schema changes
+
+| Table | Column | Type | Default |
+|-------|--------|------|---------|
+| `execution_pipeline` | `visibility` | `visibility` enum (`'private'`, `'public'`) | `'private'` |
+| `feed_items` | `visibility` | `visibility` enum (`'private'`, `'public'`) | `'private'` |
+
+The `public_feed` database view is updated to filter `WHERE visibility = 'public'`.
+
+Migration: [`schema/003_visibility.sql`](./schema/003_visibility.sql)
+
+### Purpose
+
+This is **not** a permissions system or RBAC. It is a simple internal visibility layer so the AI & Automation Lead can:
+
+- Create and track pipeline work privately before it's ready to share
+- Publish feed items as private drafts before revealing them to the company
+- Selectively reveal items to management/public views when ready
 
 ---
 

@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import { logAdminAction } from '@/lib/audit-log'
-import { ExecutionStatus } from '@/lib/types'
+import { ExecutionStatus, Visibility } from '@/lib/types'
 
 const VALID_STATUSES: ExecutionStatus[] = ['planned', 'in_progress', 'testing', 'deployed', 'cancelled']
+const VALID_VISIBILITIES: Visibility[] = ['private', 'public']
 
 export async function GET(req: NextRequest) {
   const authErr = await validateAdminRequest(req)
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { title, linked_submission_id, solution_type, tool_used, status, deployed_link, before_time, after_time, actual_hours_saved, notes } = body
+    const { title, linked_submission_id, solution_type, tool_used, status, deployed_link, before_time, after_time, actual_hours_saved, notes, visibility } = body
 
     if (!title || typeof title !== 'string' || title.trim().length === 0) {
       return NextResponse.json({ error: 'Title is required.' }, { status: 400 })
@@ -45,6 +46,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid status.' }, { status: 400 })
     }
 
+    const pipelineVisibilityValue = visibility ?? 'private'
+    if (typeof pipelineVisibilityValue !== 'string' || !VALID_VISIBILITIES.includes(pipelineVisibilityValue as Visibility)) {
+      return NextResponse.json({ error: 'Invalid visibility.' }, { status: 400 })
+    }
+    const pipelineVisibility: Visibility = pipelineVisibilityValue as Visibility
+
     const { data, error } = await supabaseAdmin
       .from('execution_pipeline')
       .insert({
@@ -53,6 +60,7 @@ export async function POST(req: NextRequest) {
         solution_type: solution_type?.trim() || null,
         tool_used: tool_used?.trim() || null,
         status: pipelineStatus,
+        visibility: pipelineVisibility,
         deployed_link: deployed_link?.trim() || null,
         before_time: before_time ?? null,
         after_time: after_time ?? null,

@@ -1,8 +1,8 @@
 import GlassCard from '@/components/GlassCard'
 import ImpactDot from '@/components/ImpactDot'
 import { supabaseAdmin } from '@/lib/supabase'
-import { ExecutionPipelineItem, EXECUTION_STATUS_LABELS, ExecutionStatus } from '@/lib/types'
-import { ShieldAlert, Plus, Rocket, Clock, CheckCircle } from 'lucide-react'
+import { ExecutionPipelineItem, EXECUTION_STATUS_LABELS, ExecutionStatus, Visibility } from '@/lib/types'
+import { ShieldAlert, Plus, Rocket, Clock, CheckCircle, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -35,6 +35,8 @@ export default async function PipelinePage() {
   const deployed = items.filter((i) => i.status === 'deployed')
   const active = items.filter((i) => ['planned', 'in_progress', 'testing'].includes(i.status))
   const totalSaved = items.reduce((sum, i) => sum + (i.actual_hours_saved ?? 0), 0)
+  const privateCount = items.filter((i) => i.visibility === 'private').length
+  const publicCount = items.filter((i) => i.visibility === 'public').length
 
   return (
     <main className="min-h-screen px-4 pt-10 pb-10 max-w-5xl mx-auto">
@@ -62,7 +64,7 @@ export default async function PipelinePage() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 gap-3 mb-8">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-8">
         <GlassCard className="stat-card">
           <Rocket size={16} className="text-teal/60 mx-auto mb-1" />
           <div className="stat-number">{deployed.length}</div>
@@ -77,6 +79,16 @@ export default async function PipelinePage() {
           <CheckCircle size={16} className="text-success/60 mx-auto mb-1" />
           <div className="stat-number">{totalSaved.toFixed(0)}h</div>
           <div className="stat-label">Hours Saved</div>
+        </GlassCard>
+        <GlassCard className="stat-card">
+          <Eye size={16} className="text-teal/60 mx-auto mb-1" />
+          <div className="stat-number">{publicCount}</div>
+          <div className="stat-label">Public</div>
+        </GlassCard>
+        <GlassCard className="stat-card">
+          <EyeOff size={16} className="text-white/40 mx-auto mb-1" />
+          <div className="stat-number">{privateCount}</div>
+          <div className="stat-label">Private</div>
         </GlassCard>
       </div>
 
@@ -105,6 +117,14 @@ export default async function PipelinePage() {
                 </div>
                 <span className={`badge badge-dept text-xs ${statusColor(item.status as ExecutionStatus)}`}>
                   {EXECUTION_STATUS_LABELS[item.status as ExecutionStatus]}
+                </span>
+                <span className={`inline-flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded-full border ${
+                  (item.visibility as Visibility) === 'public'
+                    ? 'border-teal/25 bg-teal/10 text-teal'
+                    : 'border-white/15 bg-white/5 text-white/40'
+                }`}>
+                  {(item.visibility as Visibility) === 'public' ? <Eye size={11} /> : <EyeOff size={11} />}
+                  {(item.visibility as Visibility) === 'public' ? 'Public' : 'Private'}
                 </span>
               </div>
 

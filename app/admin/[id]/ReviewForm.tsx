@@ -17,6 +17,7 @@ import {
   Frequency,
   ReviewCategory,
   ImplementationEffort,
+  Visibility,
   ACTION_TYPE_LABELS,
   PRIORITY_LABELS,
   EASE_LABELS,
@@ -25,6 +26,7 @@ import {
   REVIEW_CATEGORY_LABELS,
   IMPLEMENTATION_EFFORT_LABELS,
   SUBMISSION_TYPE_LABELS,
+  VISIBILITY_LABELS,
   SubmissionType,
   calcHoursWastedMonth,
   calcPriorityScore,
@@ -43,6 +45,8 @@ import {
   Clock,
   TrendingUp,
   Rocket,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 
 // ─── Action Icon Map ──────────────────────────────────────────────────────────
@@ -115,6 +119,7 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
   const [feedHoursSaved, setFeedHoursSaved] = useState('')
   const [feedBeforeSummary, setFeedBeforeSummary] = useState('')
   const [feedAfterSummary, setFeedAfterSummary] = useState('')
+  const [feedVisibility, setFeedVisibility] = useState<Visibility>('private')
 
   // Loading states
   const [savingReview, setSavingReview] = useState(false)
@@ -190,6 +195,7 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
           hours_saved: feedHoursSaved ? parseFloat(feedHoursSaved) : null,
           before_summary: feedBeforeSummary.trim() || null,
           after_summary: feedAfterSummary.trim() || null,
+          visibility: feedVisibility,
         }),
       })
       if (!res.ok) throw new Error((await res.json()).error ?? 'Publish failed')
@@ -583,6 +589,36 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
                   />
                 </div>
               </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5 mb-5">
+              <label className="mono-label">Visibility</label>
+              <div className="flex gap-2" role="radiogroup" aria-label="Visibility">
+                {(Object.keys(VISIBILITY_LABELS) as Visibility[]).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    role="radio"
+                    aria-checked={feedVisibility === v}
+                    onClick={() => setFeedVisibility(v)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-mono transition-colors ${
+                      feedVisibility === v
+                        ? v === 'public'
+                          ? 'border-teal/40 bg-teal/15 text-teal'
+                          : 'border-white/30 bg-white/10 text-white/70'
+                        : 'border-white/10 bg-white/5 text-white/30 hover:border-white/20'
+                    }`}
+                  >
+                    {v === 'public' ? <Eye size={12} /> : <EyeOff size={12} />}
+                    {VISIBILITY_LABELS[v]}
+                  </button>
+                ))}
+              </div>
+              <p className="text-white/30 text-xs mt-1">
+                {feedVisibility === 'private'
+                  ? 'Private — visible only to admin/operator. Will not appear in public feed.'
+                  : 'Public — will appear in the "You Said / We Fixed" feed and homepage.'}
+              </p>
             </div>
 
             {publishMsg && (

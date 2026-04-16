@@ -43,6 +43,8 @@ export type Ease = 'easy' | 'medium' | 'hard'
 
 export type ExecutionStatus = 'planned' | 'in_progress' | 'testing' | 'deployed' | 'cancelled'
 
+export type Visibility = 'private' | 'public'
+
 // ─── Data Interfaces ─────────────────────────────────────────────────────────
 
 export interface Submission {
@@ -97,6 +99,7 @@ export interface FeedItem {
   hours_saved: number | null
   before_summary: string | null
   after_summary: string | null
+  visibility: Visibility
 }
 
 export interface ExecutionPipelineItem {
@@ -112,6 +115,7 @@ export interface ExecutionPipelineItem {
   after_time: number | null
   actual_hours_saved: number | null
   notes: string | null
+  visibility: Visibility
 }
 
 export interface AdminBoardRow extends Submission {
@@ -247,6 +251,11 @@ export const EXECUTION_STATUS_LABELS: Record<ExecutionStatus, string> = {
   testing: 'Testing',
   deployed: 'Deployed',
   cancelled: 'Cancelled',
+}
+
+export const VISIBILITY_LABELS: Record<Visibility, string> = {
+  private: 'Private',
+  public: 'Public',
 }
 
 // ─── Status Colour Map ───────────────────────────────────────────────────────

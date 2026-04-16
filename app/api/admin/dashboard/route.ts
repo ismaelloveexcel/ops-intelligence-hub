@@ -22,8 +22,8 @@ export async function GET(req: NextRequest) {
       supabaseAdmin.from('submissions').select('status'),
       supabaseAdmin.from('submissions').select('department'),
       supabaseAdmin.from('submissions').select('submission_type'),
-      supabaseAdmin.from('feed_items').select('hours_saved'),
-      supabaseAdmin.from('execution_pipeline').select('status, actual_hours_saved'),
+      supabaseAdmin.from('feed_items').select('hours_saved, visibility'),
+      supabaseAdmin.from('execution_pipeline').select('status, actual_hours_saved, visibility'),
       supabaseAdmin.from('admin_board').select('id, hours_wasted_month, priority_score, status, department, description, automation_potential, implementation_effort, review_category, frustration_level'),
     ])
 
@@ -62,6 +62,30 @@ export async function GET(req: NextRequest) {
       (sum: number, r: { actual_hours_saved: number | null }) => sum + (r.actual_hours_saved ?? 0), 0
     )
 
+    // Public-only pipeline stats
+    const publicPipeline = pipelineData.filter(
+      (r: { visibility?: string }) => r.visibility === 'public'
+    )
+    const publicDeploymentsCount = publicPipeline.filter(
+      (r: { status: string }) => r.status === 'deployed'
+    ).length
+    const publicHoursSavedPipeline = publicPipeline.reduce(
+      (sum: number, r: { actual_hours_saved: number | null }) => sum + (r.actual_hours_saved ?? 0), 0
+    )
+
+    // Public-only feed stats
+    const publicFeedData = (feedRes.data ?? []).filter(
+      (r: { visibility?: string }) => r.visibility === 'public'
+    )
+    const publicHoursSavedFeed = publicFeedData.reduce(
+      (sum: number, r: { hours_saved: number | null }) => sum + (r.hours_saved ?? 0), 0
+    )
+
+    // Pipeline visibility counts
+    const pipelineTotal = pipelineData.length
+    const pipelinePublic = publicPipeline.length
+    const pipelinePrivate = pipelineTotal - pipelinePublic
+
     // Hours wasted from board
     const boardData = boardRes.data ?? []
     const totalHoursWasted = boardData.reduce(
@@ -93,6 +117,12 @@ export async function GET(req: NextRequest) {
       deploymentsCount,
       topBottlenecks,
       quickWins,
+      // Visibility breakdowns for admin dashboard
+      pipelineTotal,
+      pipelinePublic,
+      pipelinePrivate,
+      publicDeploymentsCount,
+      publicTotalHoursSaved: Math.round((publicHoursSavedFeed + publicHoursSavedPipeline) * 100) / 100,
     })
   } catch (err) {
     console.error('[GET /api/admin/dashboard]', err)

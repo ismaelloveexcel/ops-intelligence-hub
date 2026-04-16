@@ -4,7 +4,7 @@ import { useState, useEffect, FormEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import GlassCard from '@/components/GlassCard'
 import ImpactDot from '@/components/ImpactDot'
-import { ExecutionStatus, EXECUTION_STATUS_LABELS } from '@/lib/types'
+import { ExecutionStatus, EXECUTION_STATUS_LABELS, Visibility, VISIBILITY_LABELS } from '@/lib/types'
 import { ChevronLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -24,6 +24,7 @@ export default function NewPipelineItemPage() {
   const [afterTime, setAfterTime] = useState('')
   const [actualHoursSaved, setActualHoursSaved] = useState('')
   const [notes, setNotes] = useState('')
+  const [visibility, setVisibility] = useState<Visibility>('private')
 
   // Pre-fill from query params (from "Create Execution Task" button)
   useEffect(() => {
@@ -53,6 +54,7 @@ export default function NewPipelineItemPage() {
           after_time: afterTime ? parseFloat(afterTime) : null,
           actual_hours_saved: actualHoursSaved ? parseFloat(actualHoursSaved) : null,
           notes: notes.trim() || null,
+          visibility,
         }),
       })
 
@@ -140,6 +142,24 @@ export default function NewPipelineItemPage() {
                 <option key={s} value={s}>{EXECUTION_STATUS_LABELS[s]}</option>
               ))}
             </select>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="mono-label">Visibility</label>
+            <select
+              value={visibility}
+              onChange={(e) => setVisibility(e.target.value as Visibility)}
+              className="input"
+            >
+              {(Object.keys(VISIBILITY_LABELS) as Visibility[]).map((v) => (
+                <option key={v} value={v}>{VISIBILITY_LABELS[v]}</option>
+              ))}
+            </select>
+            <p className="text-white/30 text-xs">
+              {visibility === 'private'
+                ? 'Private — visible only to admin/operator'
+                : 'Public — visible in management/public views'}
+            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
