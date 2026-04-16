@@ -34,9 +34,8 @@ async function getStats() {
 async function getRecentFeed(): Promise<FeedItem[]> {
   try {
     const { data } = await supabaseAdmin
-      .from('feed_items')
+      .from('public_feed')
       .select('*')
-      .eq('visibility', 'public')
       .order('published_at', { ascending: false })
       .limit(5)
     return (data ?? []) as FeedItem[]

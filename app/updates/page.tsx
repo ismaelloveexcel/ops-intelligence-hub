@@ -11,9 +11,8 @@ import { Plus, Megaphone } from 'lucide-react'
 async function getAllFeedItems(): Promise<FeedItem[]> {
   try {
     const { data } = await supabaseAdmin
-      .from('feed_items')
+      .from('public_feed')
       .select('*')
-      .eq('visibility', 'public')
       .order('published_at', { ascending: false })
     return (data ?? []) as FeedItem[]
   } catch {
