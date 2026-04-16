@@ -58,6 +58,8 @@ Delivery tracking module:
 ### 4. Dashboard (`/admin/dashboard`)
 Internal analytics:
 - Total submissions, hours wasted/month, hours saved, deployments
+- **Conversion rate** (% of submissions that reached accepted/in_progress/implemented)
+- **Quick wins count** (high automation potential + quick effort)
 - Status breakdown, department breakdown
 - **Top bottlenecks** (highest hours wasted, excluding completed)
 - **Quick wins** (high automation potential + quick effort)
@@ -98,7 +100,7 @@ This surfaces items that are **frequent, painful, and automatable**.
 
 ## Data Model
 
-Full schema: [`schema/001_initial.sql`](./schema/001_initial.sql)
+Full schema: [`schema/001_initial.sql`](./schema/001_initial.sql), [`schema/002_audit_log.sql`](./schema/002_audit_log.sql)
 
 | Table | Purpose |
 |-------|---------|
@@ -106,6 +108,7 @@ Full schema: [`schema/001_initial.sql`](./schema/001_initial.sql)
 | `review_actions` | Admin review scoring (1:1 with submissions) |
 | `feed_items` | Published "You Said / We Fixed" entries |
 | `execution_pipeline` | Delivery tracking items |
+| `admin_audit_log` | Audit trail for admin actions (review, publish, pipeline CRUD, login/logout) |
 
 | View | Purpose |
 |------|---------|
@@ -155,19 +158,33 @@ Full schema: [`schema/001_initial.sql`](./schema/001_initial.sql)
 | **Page-level protection** | Next.js middleware redirects all `/admin/*` page visits to login if not authenticated |
 | **API-level protection** | Same middleware rejects all `/api/admin/*` calls with 401 if not authenticated |
 | **Defence-in-depth** | Individual API routes also call `validateAdminRequest()` as a secondary check |
+| **HMAC session token** | Cookie stores an HMAC-SHA256 derived token (not the raw secret) — prevents secret leakage even if cookie is exposed |
 | **Session cookie** | `ops-admin-token` — HttpOnly, SameSite=Lax, Secure in production, 7-day expiry |
+| **Timing-safe comparison** | Login and token validation both use `timingSafeEqual` |
+| **Admin audit log** | All admin mutations (review, publish, pipeline CRUD, login/logout) are logged to `admin_audit_log` table |
 | **No unsafe fallback** | `supabaseAdmin` throws if `SUPABASE_SERVICE_ROLE_KEY` is missing — never silently falls back to anon key |
 | **Rate limiting** | 10 submissions per 15 minutes per IP on the public endpoint |
 | **Input validation** | All API routes validate types, ranges, and required fields |
 | **Lazy client init** | Both Supabase clients use `Proxy` to avoid build-time crashes |
 | **RLS enabled** | Row-level security on all tables in the schema |
 
+### Admin Audit Log
+
+All admin actions are logged to the `admin_audit_log` table with:
+- `action` — what happened (`review_saved`, `submission_published`, `pipeline_created`, `pipeline_updated`, `pipeline_deleted`, `admin_login`, `admin_logout`)
+- `entity_type` — what it affected (`submission`, `pipeline`, `session`)
+- `entity_id` — which record was affected
+- `summary` — human-readable description
+- `created_at` — timestamp
+
+Schema: [`schema/002_audit_log.sql`](./schema/002_audit_log.sql)
+
 ### What This Is NOT
 
 This is **not** a production-grade auth system. Specifically:
 
 - There is **no user management** — a single shared password (`ADMIN_API_SECRET`) grants admin access
-- The session cookie stores a token derived from the secret — it is HttpOnly (not accessible to JS) but not cryptographically signed
+- The session token is an HMAC-SHA256 derivation — it is HttpOnly and not the raw secret, but it is deterministic (not a unique session ID)
 - There is **no role-based access control** — you are either an admin or you are not
 - **Development mode** with no `ADMIN_API_SECRET` set bypasses all protection with a console warning
 
@@ -190,7 +207,7 @@ npm install
 ```
 
 ### 2. Supabase
-Create a project at [supabase.com](https://supabase.com). Run [`schema/001_initial.sql`](./schema/001_initial.sql) in the SQL editor.
+Create a project at [supabase.com](https://supabase.com). Run [`schema/001_initial.sql`](./schema/001_initial.sql) and [`schema/002_audit_log.sql`](./schema/002_audit_log.sql) in the SQL editor.
 
 ### 3. Environment
 Copy `.env.local.example` → `.env.local` and fill in:
