@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import GlassCard from '@/components/GlassCard'
 import { StatusBadge, ImpactBadge, DeptBadge } from '@/components/StatusBadge'
 import ImpactDot from '@/components/ImpactDot'
@@ -41,6 +42,7 @@ import {
   CheckCircle2,
   Clock,
   TrendingUp,
+  Rocket,
 } from 'lucide-react'
 
 // ─── Action Icon Map ──────────────────────────────────────────────────────────
@@ -604,6 +606,40 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
             </button>
           </>
         )}
+      </GlassCard>
+
+      {/* ── Create Execution Task ──────────────────────────────────────────── */}
+      <GlassCard className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <p className="mono-label">Move to Execution</p>
+          <Rocket size={16} className="text-teal/50" />
+        </div>
+        <p className="text-white/45 text-xs mb-4 leading-relaxed">
+          Create a pipeline item from this submission to track its implementation.
+        </p>
+        <Link
+          href={`/admin/pipeline/new?${new URLSearchParams({
+            linked_submission_id: row.id,
+            title: row.process_name
+              ? `Automate: ${row.process_name}`
+              : row.description?.slice(0, 80) ?? '',
+            solution_type: row.review_category === 'automation'
+              ? 'Automation'
+              : row.review_category === 'process'
+              ? 'Process Improvement'
+              : row.review_category === 'training'
+              ? 'Training'
+              : '',
+            notes: [
+              row.admin_notes ?? '',
+              row.suggested_fix ? `Suggested fix: ${row.suggested_fix}` : '',
+              row.implementation_effort ? `Effort: ${row.implementation_effort}` : '',
+            ].filter(Boolean).join(' | '),
+          }).toString()}`}
+          className="btn-primary inline-flex"
+        >
+          <Rocket size={15} /> Create Execution Task
+        </Link>
       </GlassCard>
     </div>
   )

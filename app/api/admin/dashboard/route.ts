@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
     // Quick wins (high automation potential + quick effort, not implemented)
     const quickWins = activeItems
       .filter((r: { automation_potential: number | null; implementation_effort: string | null }) =>
-        (r.automation_potential ?? 0) >= 3 && r.implementation_effort === 'quick')
+        (r.automation_potential ?? 0) >= 4 && r.implementation_effort === 'quick')
       .slice(0, 5)
 
     return NextResponse.json({
