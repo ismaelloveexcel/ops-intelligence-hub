@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, FormEvent } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import GlassCard from '@/components/GlassCard'
 import ImpactDot from '@/components/ImpactDot'
 import { ExecutionStatus, EXECUTION_STATUS_LABELS } from '@/lib/types'
@@ -10,10 +10,12 @@ import Link from 'next/link'
 
 export default function NewPipelineItemPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   const [title, setTitle] = useState('')
+  const [linkedSubmissionId, setLinkedSubmissionId] = useState('')
   const [solutionType, setSolutionType] = useState('')
   const [toolUsed, setToolUsed] = useState('')
   const [status, setStatus] = useState<ExecutionStatus>('planned')
@@ -22,6 +24,14 @@ export default function NewPipelineItemPage() {
   const [afterTime, setAfterTime] = useState('')
   const [actualHoursSaved, setActualHoursSaved] = useState('')
   const [notes, setNotes] = useState('')
+
+  // Pre-fill from query params (from "Create Execution Task" button)
+  useEffect(() => {
+    if (searchParams.get('title')) setTitle(searchParams.get('title') ?? '')
+    if (searchParams.get('linked_submission_id')) setLinkedSubmissionId(searchParams.get('linked_submission_id') ?? '')
+    if (searchParams.get('solution_type')) setSolutionType(searchParams.get('solution_type') ?? '')
+    if (searchParams.get('notes')) setNotes(searchParams.get('notes') ?? '')
+  }, [searchParams])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -34,6 +44,7 @@ export default function NewPipelineItemPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: title.trim(),
+          linked_submission_id: linkedSubmissionId.trim() || null,
           solution_type: solutionType.trim() || null,
           tool_used: toolUsed.trim() || null,
           status,
@@ -88,6 +99,12 @@ export default function NewPipelineItemPage() {
               className="input"
             />
           </div>
+
+          {linkedSubmissionId && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-teal/10 border border-teal/20 text-teal text-xs font-mono">
+              Linked to submission: {linkedSubmissionId.slice(0, 8).toUpperCase()}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">

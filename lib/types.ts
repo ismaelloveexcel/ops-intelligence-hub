@@ -146,6 +146,14 @@ export function calcHoursWastedMonth(
   return (timePerOccurrenceMin * occurrencesPerWeek * 4) / 60
 }
 
+/** Quick win: automation_potential >= 4 AND implementation_effort = 'quick' */
+export function isQuickWin(
+  automationPotential: number | null,
+  implementationEffort: ImplementationEffort | string | null
+): boolean {
+  return (automationPotential ?? 0) >= 4 && implementationEffort === 'quick'
+}
+
 /** Priority score: hours_wasted_month × automation_potential × frustration_level */
 export function calcPriorityScore(
   hoursWastedMonth: number | null,

@@ -61,7 +61,7 @@ async function getDashboardData() {
       .slice(0, 5)
 
     const quickWins = activeItems
-      .filter((r) => (r.automation_potential ?? 0) >= 3 && r.implementation_effort === 'quick')
+      .filter((r) => (r.automation_potential ?? 0) >= 4 && r.implementation_effort === 'quick')
       .slice(0, 5)
 
     // Conversion metrics
@@ -240,12 +240,18 @@ export default async function DashboardPage() {
       </div>
 
       {/* Links */}
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <Link href="/admin" className="btn-secondary text-sm">
           Triage Board →
         </Link>
         <Link href="/admin/pipeline" className="btn-secondary text-sm">
           Execution Pipeline →
+        </Link>
+        <Link href="/admin/work" className="btn-secondary text-sm">
+          Active Work →
+        </Link>
+        <Link href="/admin/audit" className="btn-secondary text-sm">
+          Audit Log →
         </Link>
       </div>
     </main>
