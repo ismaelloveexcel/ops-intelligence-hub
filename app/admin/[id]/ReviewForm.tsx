@@ -525,7 +525,7 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
         ) : (
           <>
             <p className="text-white/45 text-xs mb-4 leading-relaxed">
-              Write a short, employee-friendly summary for the &quot;You Said / We Fixed&quot; feed.
+              Write a short, employee-friendly summary for the &quot;From Feedback to Action&quot; feed.
             </p>
 
             <div className="flex flex-col gap-4 mb-5">
@@ -617,7 +617,7 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
               <p className="text-white/30 text-xs mt-1">
                 {feedVisibility === 'private'
                   ? 'Private — visible only to admin/operator. Will not appear in public feed.'
-                  : 'Public — will appear in the "You Said / We Fixed" feed and homepage.'}
+                  : 'Public — will appear in the "From Feedback to Action" feed and homepage.'}
               </p>
             </div>
 

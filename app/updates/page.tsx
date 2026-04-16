@@ -55,7 +55,7 @@ export default async function UpdatesPage() {
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-2">
           <ImpactDot />
-          <p className="mono-label">You Said · We Fixed</p>
+          <p className="mono-label">From Feedback to Action</p>
         </div>
         <h1 className="text-3xl font-bold tracking-tight mb-2">
           All Updates
@@ -123,15 +123,19 @@ export default async function UpdatesPage() {
                         </span>
                       </div>
 
-                      <h2 className="text-white font-semibold text-base leading-snug mb-2">
+                      <h2 className="text-white font-semibold text-base leading-snug mb-1">
                         {item.title}
                       </h2>
-                      <p className="text-white/55 text-sm leading-relaxed">
-                        {item.what_changed}
-                      </p>
+
+                      <div className="mb-2">
+                        <p className="text-teal/60 text-[10px] font-mono uppercase tracking-widest mb-0.5">Action Taken</p>
+                        <p className="text-white/55 text-sm leading-relaxed">
+                          {item.what_changed}
+                        </p>
+                      </div>
 
                       {(item.before_summary || item.after_summary) && (
-                        <div className="mt-3 grid grid-cols-2 gap-2">
+                        <div className="mt-2 grid grid-cols-2 gap-2">
                           {item.before_summary && (
                             <div className="bg-danger/5 border border-danger/15 rounded-lg px-3 py-2">
                               <p className="text-danger/60 text-[10px] font-mono uppercase tracking-widest mb-0.5">Before</p>
@@ -140,7 +144,7 @@ export default async function UpdatesPage() {
                           )}
                           {item.after_summary && (
                             <div className="bg-success/5 border border-success/15 rounded-lg px-3 py-2">
-                              <p className="text-success/60 text-[10px] font-mono uppercase tracking-widest mb-0.5">After</p>
+                              <p className="text-success/60 text-[10px] font-mono uppercase tracking-widest mb-0.5">Result</p>
                               <p className="text-white/50 text-xs">{item.after_summary}</p>
                             </div>
                           )}

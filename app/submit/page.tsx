@@ -127,15 +127,28 @@ export default function SubmitPage() {
 
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-2 mb-2">
-          <ImpactDot />
-          <p className="mono-label">Improve Our Work</p>
-        </div>
-        <h1 className="text-2xl font-bold tracking-tight">Share Your Input</h1>
-        <p className="text-white/50 text-sm mt-2 leading-relaxed">
-          Report a problem, suggest an improvement, or share a quick idea.
-          Your input drives what we fix and build next.
+        <p className="text-white/30 text-xs font-mono uppercase tracking-widest mb-3">Operations Intelligence Hub</p>
+        <h1 className="text-2xl font-bold tracking-tight mb-3">Making Work Easier</h1>
+        <p className="text-white/55 text-sm leading-relaxed">
+          If something takes longer than it should, feels repetitive, or could be made simpler — feel free to share it here.
         </p>
+        <p className="text-white/55 text-sm leading-relaxed mt-2">
+          The aim is to reduce unnecessary steps and make day-to-day work smoother.
+        </p>
+        <p className="text-white/55 text-sm leading-relaxed mt-2">
+          No suggestion is too small.
+        </p>
+      </div>
+
+      {/* Example guidance */}
+      <div className="mb-6 rounded-xl border border-white/[0.08] bg-white/[0.03] px-5 py-4">
+        <p className="text-white/40 text-xs font-mono uppercase tracking-widest mb-2">Examples</p>
+        <ul className="text-white/50 text-sm leading-relaxed space-y-1">
+          <li>• Repetitive manual tasks</li>
+          <li>• Delays in getting information</li>
+          <li>• Too many steps for simple tasks</li>
+          <li>• Things that could be simplified or streamlined</li>
+        </ul>
       </div>
 
       {/* Submission type selector */}
@@ -222,7 +235,7 @@ export default function SubmitPage() {
           {/* Description */}
           <div className="flex flex-col gap-2">
             <label htmlFor="description" className="mono-label">
-              {isQuickIdea ? "What's your idea?" : "What's the issue or suggestion?"}
+              {isQuickIdea ? "What's your idea?" : "What is slowing things down?"}
             </label>
             <textarea
               id="description"
@@ -231,9 +244,7 @@ export default function SubmitPage() {
               placeholder={
                 isQuickIdea
                   ? 'Describe your idea in a few sentences.'
-                  : submissionType === 'suggestion'
-                  ? 'What could be improved? What would work better?'
-                  : 'Describe the pain point. What are you doing manually? What breaks or slows you down?'
+                  : 'Example: We manually copy client details from emails into Excel every day, which takes time and can lead to errors.'
               }
               required
               maxLength={2000}
@@ -387,7 +398,7 @@ export default function SubmitPage() {
           {/* Suggested Fix (optional) */}
           <div className="flex flex-col gap-2">
             <label htmlFor="suggested_fix" className="mono-label">
-              {submissionType === 'suggestion' ? 'Your Suggestion' : 'Suggested Fix'}{' '}
+              What could work better?{' '}
               <span className="text-white/30 normal-case tracking-normal text-xs ml-1">
                 (optional)
               </span>
@@ -396,7 +407,7 @@ export default function SubmitPage() {
               id="suggested_fix"
               value={suggestedFix}
               onChange={(e) => setSuggestedFix(e.target.value)}
-              placeholder="Any idea how this could be solved? Even a rough idea helps."
+              placeholder="Your idea — even a rough thought helps."
               maxLength={1000}
               className="input"
               rows={3}

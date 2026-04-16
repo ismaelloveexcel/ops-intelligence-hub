@@ -278,6 +278,9 @@ export default async function DashboardPage() {
         <Link href="/admin/pipeline" className="btn-secondary text-sm">
           Execution Pipeline →
         </Link>
+        <Link href="/admin/reports" className="btn-secondary text-sm">
+          Reports →
+        </Link>
         <Link href="/admin/work" className="btn-secondary text-sm">
           Active Work →
         </Link>

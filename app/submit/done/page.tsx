@@ -48,7 +48,7 @@ export default function SubmitDonePage() {
               </li>
               <li className="flex gap-2">
                 <span className="text-teal font-mono font-bold shrink-0">03</span>
-                When fixed, it appears in the &quot;You Said / We Fixed&quot; feed.
+                When fixed, it appears in the &quot;From Feedback to Action&quot; feed.
               </li>
             </ol>
           </div>
