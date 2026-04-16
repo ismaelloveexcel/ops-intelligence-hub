@@ -124,7 +124,7 @@ SELECT
   r.automation_potential,
   r.implementation_effort,
   r.review_category,
-  r.impact_level       AS review_impact_level,
+  r.impact_level,
   r.estimated_hours_saved_monthly,
   -- Derived: hours wasted per month = (time_per_occurrence × occurrences_per_week × 4) / 60
   CASE
