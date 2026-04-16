@@ -8,7 +8,7 @@ import {
   DEPARTMENT_LABELS,
   Department,
 } from '@/lib/types'
-import { ShieldAlert, TrendingUp, Clock, Zap, CheckCircle, BarChart3 } from 'lucide-react'
+import { ShieldAlert, TrendingUp, Clock, Zap, CheckCircle, BarChart3, ArrowRightLeft, Lightbulb } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -64,6 +64,12 @@ async function getDashboardData() {
       .filter((r) => (r.automation_potential ?? 0) >= 3 && r.implementation_effort === 'quick')
       .slice(0, 5)
 
+    // Conversion metrics
+    const actionedCount = board.filter(
+      (r) => ['accepted', 'in_progress', 'implemented'].includes(r.status)
+    ).length
+    const conversionRate = total > 0 ? Math.round((actionedCount / total) * 100) : 0
+
     return {
       total,
       statusCounts,
@@ -73,6 +79,9 @@ async function getDashboardData() {
       deploymentsCount,
       topBottlenecks,
       quickWins,
+      quickWinsCount: quickWins.length,
+      conversionRate,
+      actionedCount,
     }
   } catch {
     return {
@@ -84,6 +93,9 @@ async function getDashboardData() {
       deploymentsCount: 0,
       topBottlenecks: [] as AdminBoardRow[],
       quickWins: [] as AdminBoardRow[],
+      quickWinsCount: 0,
+      conversionRate: 0,
+      actionedCount: 0,
     }
   }
 }
@@ -118,12 +130,14 @@ export default async function DashboardPage() {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
         {[
           { icon: BarChart3, value: data.total, label: 'Total Submissions' },
           { icon: Clock, value: `${data.totalHoursWasted.toFixed(0)}h`, label: 'Hours Wasted/Mo' },
           { icon: CheckCircle, value: `${data.totalHoursSaved.toFixed(0)}h`, label: 'Hours Saved' },
           { icon: Zap, value: data.deploymentsCount, label: 'Deployed' },
+          { icon: ArrowRightLeft, value: `${data.conversionRate}%`, label: 'Conversion Rate' },
+          { icon: Lightbulb, value: data.quickWinsCount, label: 'Quick Wins' },
         ].map(({ icon: Icon, value, label }) => (
           <GlassCard key={label} className="stat-card">
             <div className="flex items-center justify-center gap-1 mb-1">
