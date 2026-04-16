@@ -7,7 +7,7 @@ import { ExecutionStatus } from '@/lib/types'
 const VALID_STATUSES: ExecutionStatus[] = ['planned', 'in_progress', 'testing', 'deployed', 'cancelled']
 
 export async function GET(req: NextRequest) {
-  const authErr = validateAdminRequest(req)
+  const authErr = await validateAdminRequest(req)
   if (authErr) return authErr
 
   try {
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const authErr = validateAdminRequest(req)
+  const authErr = await validateAdminRequest(req)
   if (authErr) return authErr
 
   try {

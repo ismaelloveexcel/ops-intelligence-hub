@@ -5,7 +5,7 @@ import { validateAdminRequest } from '@/lib/admin-auth'
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
-  const authErr = validateAdminRequest(req)
+  const authErr = await validateAdminRequest(req)
   if (authErr) return authErr
 
   try {

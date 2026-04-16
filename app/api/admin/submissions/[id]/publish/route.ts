@@ -9,7 +9,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const authErr = validateAdminRequest(req)
+  const authErr = await validateAdminRequest(req)
   if (authErr) return authErr
 
   try {

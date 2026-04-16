@@ -14,7 +14,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const authErr = validateAdminRequest(req)
+  const authErr = await validateAdminRequest(req)
   if (authErr) return authErr
 
   try {
@@ -41,7 +41,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const authErr = validateAdminRequest(req)
+  const authErr = await validateAdminRequest(req)
   if (authErr) return authErr
 
   try {

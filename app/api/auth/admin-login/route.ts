@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { timingSafeEqual } from 'crypto'
-import { deriveSessionToken } from '@/lib/session-token'
+import { deriveSessionToken, constantTimeEqual } from '@/lib/session-token'
 import { logAdminAction } from '@/lib/audit-log'
 
 /** Session duration: 7 days in seconds */
@@ -31,14 +30,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Constant-time comparison to prevent timing attacks
-    const passwordBuf = Buffer.from(password)
-    const secretBuf = Buffer.from(secret)
-    if (passwordBuf.length !== secretBuf.length || !timingSafeEqual(passwordBuf, secretBuf)) {
+    if (!constantTimeEqual(password, secret)) {
       return NextResponse.json({ error: 'Invalid password.' }, { status: 401 })
     }
 
     // Derive an HMAC token — the raw secret is never stored in the cookie
-    const token = deriveSessionToken(secret)
+    const token = await deriveSessionToken(secret)
 
     const response = NextResponse.json({ success: true })
 

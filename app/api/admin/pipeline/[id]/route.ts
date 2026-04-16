@@ -10,7 +10,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const authErr = validateAdminRequest(req)
+  const authErr = await validateAdminRequest(req)
   if (authErr) return authErr
 
   try {
@@ -33,6 +33,13 @@ export async function PATCH(
     if (body.after_time !== undefined) { updates.after_time = body.after_time; changes.push('after_time') }
     if (body.actual_hours_saved !== undefined) { updates.actual_hours_saved = body.actual_hours_saved; changes.push('actual_hours_saved') }
     if (body.notes !== undefined) { updates.notes = body.notes?.trim() || null; changes.push('notes') }
+
+    if (changes.length === 0) {
+      return NextResponse.json(
+        { error: 'No valid fields provided for update.' },
+        { status: 400 }
+      )
+    }
 
     const { error } = await supabaseAdmin
       .from('execution_pipeline')
@@ -63,7 +70,7 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const authErr = validateAdminRequest(req)
+  const authErr = await validateAdminRequest(req)
   if (authErr) return authErr
 
   try {

@@ -13,13 +13,13 @@ import { validateSessionToken } from '@/lib/session-token'
  * 2. In development (NODE_ENV === 'development') without secret → allow with warning.
  * 3. Otherwise → reject.
  */
-export function validateAdminRequest(req: NextRequest): NextResponse | null {
+export async function validateAdminRequest(req: NextRequest): Promise<NextResponse | null> {
   const secret = process.env.ADMIN_API_SECRET
 
   if (secret) {
     // Check session cookie (HMAC-derived token set by /api/auth/admin-login)
     const token = req.cookies.get('ops-admin-token')?.value
-    if (token && validateSessionToken(token, secret)) return null // authorised
+    if (token && await validateSessionToken(token, secret)) return null // authorised
 
     return NextResponse.json({ error: 'Unauthorised.' }, { status: 401 })
   }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { deriveSessionToken, validateSessionToken } from '@/lib/session-token'
+import { validateSessionToken } from '@/lib/session-token'
 
 /**
  * Edge middleware — protects all /admin pages and /api/admin API routes.
@@ -12,7 +12,7 @@ import { deriveSessionToken, validateSessionToken } from '@/lib/session-token'
  *
  * The cookie is set by /api/auth/admin-login after password verification.
  */
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
   // Always allow the login page and auth endpoints through
@@ -41,7 +41,7 @@ export function middleware(req: NextRequest) {
   // ── Secret configured — check cookie ──────────────────────────────────────
   const token = req.cookies.get('ops-admin-token')?.value
 
-  if (token && validateSessionToken(token, secret)) {
+  if (token && await validateSessionToken(token, secret)) {
     return NextResponse.next()
   }
 
