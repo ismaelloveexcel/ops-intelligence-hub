@@ -1,22 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { SubmissionStatus } from '@/lib/types'
+import { validateAdminRequest } from '@/lib/admin-auth'
+import { logAdminAction } from '@/lib/audit-log'
 
 const VALID_STATUSES: SubmissionStatus[] = [
-  'new',
-  'reviewing',
-  'accepted',
-  'in_progress',
-  'rejected',
-  'implemented',
+  'new', 'reviewing', 'accepted', 'in_progress', 'rejected', 'implemented',
 ]
 
 // ─── GET — fetch full admin_board row ────────────────────────────────────────
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const authErr = await validateAdminRequest(req)
+  if (authErr) return authErr
+
   try {
     const { data, error } = await supabaseAdmin
       .from('admin_board')
@@ -41,6 +41,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const authErr = await validateAdminRequest(req)
+  if (authErr) return authErr
+
   try {
     const body = await req.json()
 
@@ -53,11 +56,20 @@ export async function PATCH(
       time_wasted_hrs,
       admin_notes,
       status,
+      automation_potential,
+      implementation_effort,
+      review_category,
+      impact_level,
+      estimated_hours_saved_monthly,
     } = body
 
     // Validate status if provided
     if (status && !VALID_STATUSES.includes(status)) {
       return NextResponse.json({ error: 'Invalid status.' }, { status: 400 })
+    }
+
+    if (automation_potential != null && (automation_potential < 1 || automation_potential > 5)) {
+      return NextResponse.json({ error: 'Automation potential must be 1–5.' }, { status: 400 })
     }
 
     // Upsert review_actions (conflict on submission_id)
@@ -74,6 +86,11 @@ export async function PATCH(
           time_wasted_hrs: time_wasted_hrs ?? null,
           admin_notes: admin_notes ?? null,
           reviewed_at: new Date().toISOString(),
+          automation_potential: automation_potential ?? null,
+          implementation_effort: implementation_effort ?? null,
+          review_category: review_category ?? null,
+          impact_level: impact_level ?? null,
+          estimated_hours_saved_monthly: estimated_hours_saved_monthly ?? null,
         },
         { onConflict: 'submission_id' }
       )
@@ -95,6 +112,14 @@ export async function PATCH(
         return NextResponse.json({ error: 'Failed to update status.' }, { status: 500 })
       }
     }
+
+    // Audit log
+    logAdminAction({
+      action: 'review_saved',
+      entity_type: 'submission',
+      entity_id: params.id,
+      summary: `Review saved${status ? ` — status → ${status}` : ''}${action_type ? ` — action: ${action_type}` : ''}`,
+    })
 
     return NextResponse.json({ success: true })
   } catch (err) {

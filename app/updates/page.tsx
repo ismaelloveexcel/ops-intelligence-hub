@@ -112,6 +112,11 @@ export default async function UpdatesPage() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <ImpactDot size="sm" />
                           <DeptBadge department={item.department as Department} size="sm" />
+                          {item.hours_saved != null && item.hours_saved > 0 && (
+                            <span className="badge badge-new text-[10px]">
+                              {item.hours_saved}h saved
+                            </span>
+                          )}
                         </div>
                         <span className="text-white/30 text-xs font-mono shrink-0">
                           {formatDate(item.published_at)}
@@ -124,6 +129,23 @@ export default async function UpdatesPage() {
                       <p className="text-white/55 text-sm leading-relaxed">
                         {item.what_changed}
                       </p>
+
+                      {(item.before_summary || item.after_summary) && (
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          {item.before_summary && (
+                            <div className="bg-danger/5 border border-danger/15 rounded-lg px-3 py-2">
+                              <p className="text-danger/60 text-[10px] font-mono uppercase tracking-widest mb-0.5">Before</p>
+                              <p className="text-white/50 text-xs">{item.before_summary}</p>
+                            </div>
+                          )}
+                          {item.after_summary && (
+                            <div className="bg-success/5 border border-success/15 rounded-lg px-3 py-2">
+                              <p className="text-success/60 text-[10px] font-mono uppercase tracking-widest mb-0.5">After</p>
+                              <p className="text-white/50 text-xs">{item.after_summary}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </GlassCard>
                   ))}
                 </div>
