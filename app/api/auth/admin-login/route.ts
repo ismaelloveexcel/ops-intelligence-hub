@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { timingSafeEqual } from 'crypto'
 
 /**
  * POST /api/auth/admin-login
@@ -24,9 +25,10 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Constant-time comparison is ideal but for an internal tool,
-    // a direct comparison is acceptable.
-    if (password !== secret) {
+    // Constant-time comparison to prevent timing attacks
+    const passwordBuf = Buffer.from(password)
+    const secretBuf = Buffer.from(secret)
+    if (passwordBuf.length !== secretBuf.length || !timingSafeEqual(passwordBuf, secretBuf)) {
       return NextResponse.json({ error: 'Invalid password.' }, { status: 401 })
     }
 

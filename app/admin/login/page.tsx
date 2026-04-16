@@ -77,7 +77,7 @@ export default function AdminLoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter admin password"
                   required
-                  autoFocus
+                  autoComplete="current-password"
                   className="input"
                 />
               </div>
