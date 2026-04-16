@@ -593,11 +593,13 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
 
             <div className="flex flex-col gap-1.5 mb-5">
               <label className="mono-label">Visibility</label>
-              <div className="flex gap-2">
+              <div className="flex gap-2" role="radiogroup" aria-label="Visibility">
                 {(Object.keys(VISIBILITY_LABELS) as Visibility[]).map((v) => (
                   <button
                     key={v}
                     type="button"
+                    role="radio"
+                    aria-checked={feedVisibility === v}
                     onClick={() => setFeedVisibility(v)}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-mono transition-colors ${
                       feedVisibility === v

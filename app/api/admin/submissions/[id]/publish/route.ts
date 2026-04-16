@@ -35,7 +35,10 @@ export async function POST(
     }
 
     // Validate visibility
-    const feedVisibility = visibility || 'private'
+    if (visibility != null && typeof visibility !== 'string') {
+      return NextResponse.json({ error: 'Invalid visibility.' }, { status: 400 })
+    }
+    const feedVisibility = visibility ?? 'private'
     if (!['private', 'public'].includes(feedVisibility)) {
       return NextResponse.json({ error: 'Invalid visibility.' }, { status: 400 })
     }

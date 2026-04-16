@@ -46,10 +46,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid status.' }, { status: 400 })
     }
 
-    const pipelineVisibility: Visibility = visibility || 'private'
-    if (!VALID_VISIBILITIES.includes(pipelineVisibility)) {
+    const pipelineVisibilityValue = visibility ?? 'private'
+    if (typeof pipelineVisibilityValue !== 'string' || !VALID_VISIBILITIES.includes(pipelineVisibilityValue as Visibility)) {
       return NextResponse.json({ error: 'Invalid visibility.' }, { status: 400 })
     }
+    const pipelineVisibility: Visibility = pipelineVisibilityValue as Visibility
 
     const { data, error } = await supabaseAdmin
       .from('execution_pipeline')
