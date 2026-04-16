@@ -632,8 +632,8 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
             notes: [
               row.admin_notes ?? '',
               row.suggested_fix ? `Suggested fix: ${row.suggested_fix}` : '',
+              row.implementation_effort ? `Effort: ${row.implementation_effort}` : '',
             ].filter(Boolean).join(' | '),
-            effort: row.implementation_effort ?? '',
           }).toString()}`}
           className="btn-primary inline-flex"
         >
