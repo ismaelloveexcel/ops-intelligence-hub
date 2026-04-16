@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { timingSafeEqual } from 'crypto'
 import { deriveSessionToken } from '@/lib/session-token'
+import { logAdminAction } from '@/lib/audit-log'
 
 /**
  * POST /api/auth/admin-login
@@ -45,6 +46,13 @@ export async function POST(req: NextRequest) {
       path: '/',
       // 7-day session — reasonable for an internal tool
       maxAge: 60 * 60 * 24 * 7,
+    })
+
+    // Audit log (non-blocking)
+    logAdminAction({
+      action: 'admin_login',
+      entity_type: 'session',
+      summary: 'Admin login successful',
     })
 
     return response

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { validateAdminRequest } from '@/lib/admin-auth'
+import { logAdminAction } from '@/lib/audit-log'
 
 // ─── POST — publish submission to the public feed ────────────────────────────
 
@@ -76,6 +77,14 @@ export async function POST(
     if (statusErr) {
       console.error('[POST publish] status update:', statusErr)
     }
+
+    // Audit log
+    logAdminAction({
+      action: 'submission_published',
+      entity_type: 'submission',
+      entity_id: params.id,
+      summary: `Published to feed: "${title.trim()}"`,
+    })
 
     return NextResponse.json({ success: true })
   } catch (err) {

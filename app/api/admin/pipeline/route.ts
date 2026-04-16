@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { validateAdminRequest } from '@/lib/admin-auth'
+import { logAdminAction } from '@/lib/audit-log'
 import { ExecutionStatus } from '@/lib/types'
 
 const VALID_STATUSES: ExecutionStatus[] = ['planned', 'in_progress', 'testing', 'deployed', 'cancelled']
@@ -65,6 +66,14 @@ export async function POST(req: NextRequest) {
       console.error('[POST /api/admin/pipeline]', error)
       return NextResponse.json({ error: 'Failed to create pipeline item.' }, { status: 500 })
     }
+
+    // Audit log
+    logAdminAction({
+      action: 'pipeline_created',
+      entity_type: 'pipeline',
+      entity_id: data.id,
+      summary: `Created: "${title.trim()}" (${pipelineStatus})`,
+    })
 
     return NextResponse.json({ id: data.id }, { status: 201 })
   } catch (err) {

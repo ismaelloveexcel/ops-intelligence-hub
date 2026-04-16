@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { SubmissionStatus } from '@/lib/types'
 import { validateAdminRequest } from '@/lib/admin-auth'
+import { logAdminAction } from '@/lib/audit-log'
 
 const VALID_STATUSES: SubmissionStatus[] = [
   'new', 'reviewing', 'accepted', 'in_progress', 'rejected', 'implemented',
@@ -111,6 +112,14 @@ export async function PATCH(
         return NextResponse.json({ error: 'Failed to update status.' }, { status: 500 })
       }
     }
+
+    // Audit log
+    logAdminAction({
+      action: 'review_saved',
+      entity_type: 'submission',
+      entity_id: params.id,
+      summary: `Review saved${status ? ` — status → ${status}` : ''}${action_type ? ` — action: ${action_type}` : ''}`,
+    })
 
     return NextResponse.json({ success: true })
   } catch (err) {
