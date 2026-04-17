@@ -2,7 +2,7 @@ import GlassCard from '@/components/GlassCard'
 import ImpactDot from '@/components/ImpactDot'
 import { supabaseAdmin } from '@/lib/supabase'
 import { ExecutionPipelineItem, EXECUTION_STATUS_LABELS, ExecutionStatus, Visibility } from '@/lib/types'
-import { ShieldAlert, Plus, Rocket, Clock, CheckCircle, Eye, EyeOff } from 'lucide-react'
+import { ShieldAlert, Plus, Rocket, Clock, CheckCircle, Eye, EyeOff, Star } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -38,6 +38,10 @@ export default async function PipelinePage() {
   const privateCount = items.filter((i) => i.visibility === 'private').length
   const publicCount = items.filter((i) => i.visibility === 'public').length
 
+  const readyToShow = items.filter(
+    (i) => (i.visibility as Visibility) === 'private' && i.status === 'deployed'
+  )
+
   return (
     <main className="min-h-screen px-4 pt-10 pb-10 max-w-5xl mx-auto">
       {/* Header */}
@@ -56,7 +60,7 @@ export default async function PipelinePage() {
           <Link href="/admin/pipeline/new" className="btn-primary text-sm py-2.5 px-4">
             <Plus size={15} /> Add Item
           </Link>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gold/25 bg-gold/8 text-gold text-xs font-mono">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gold/25 bg-gold/[0.08] text-gold text-xs font-mono">
             <ShieldAlert size={13} />
             Admin
           </div>
@@ -64,9 +68,9 @@ export default async function PipelinePage() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-8">
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-8">
         <GlassCard className="stat-card">
-          <Rocket size={16} className="text-teal/60 mx-auto mb-1" />
+          <Rocket size={16} className="text-gold/60 mx-auto mb-1" />
           <div className="stat-number">{deployed.length}</div>
           <div className="stat-label">Deployed</div>
         </GlassCard>
@@ -81,7 +85,7 @@ export default async function PipelinePage() {
           <div className="stat-label">Hours Saved</div>
         </GlassCard>
         <GlassCard className="stat-card">
-          <Eye size={16} className="text-teal/60 mx-auto mb-1" />
+          <Eye size={16} className="text-gold/60 mx-auto mb-1" />
           <div className="stat-number">{publicCount}</div>
           <div className="stat-label">Public</div>
         </GlassCard>
@@ -90,12 +94,45 @@ export default async function PipelinePage() {
           <div className="stat-number">{privateCount}</div>
           <div className="stat-label">Private</div>
         </GlassCard>
+        <GlassCard className="stat-card">
+          <Star size={16} className="text-gold/60 mx-auto mb-1" />
+          <div className="stat-number">{readyToShow.length}</div>
+          <div className="stat-label">Ready to Show</div>
+        </GlassCard>
       </div>
+
+      {/* Ready to Show Section */}
+      {readyToShow.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Star size={14} className="text-gold" />
+            <p className="mono-label">Ready to Show</p>
+            <span className="ml-auto text-white/30 text-xs font-mono">
+              Private + Deployed — flip to public to publish
+            </span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {readyToShow.map((item) => (
+              <GlassCard key={item.id} className="p-4 border-gold/20">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-white font-semibold text-sm">{item.title}</h3>
+                    {item.tool_used && (
+                      <span className="text-white/40 text-xs">Tool: {item.tool_used}</span>
+                    )}
+                  </div>
+                  <span className="badge badge-ready badge-sm">Ready</span>
+                </div>
+              </GlassCard>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Pipeline items */}
       {items.length === 0 ? (
         <GlassCard className="py-16 text-center">
-          <Rocket size={36} className="text-teal/40 mx-auto mb-4" />
+          <Rocket size={36} className="text-gold/40 mx-auto mb-4" />
           <h2 className="text-white/60 font-semibold mb-2">No pipeline items yet</h2>
           <p className="text-white/30 text-sm mb-6">
             Start tracking your automation builds and deployments.
@@ -107,7 +144,7 @@ export default async function PipelinePage() {
       ) : (
         <div className="flex flex-col gap-3">
           {items.map((item) => (
-            <GlassCard key={item.id} className="p-5 hover:border-teal/25 transition-colors">
+            <GlassCard key={item.id} className="p-5 hover:border-gold/25 transition-colors">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div>
                   <h3 className="text-white font-semibold text-sm">{item.title}</h3>
@@ -120,7 +157,7 @@ export default async function PipelinePage() {
                 </span>
                 <span className={`inline-flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded-full border ${
                   (item.visibility as Visibility) === 'public'
-                    ? 'border-teal/25 bg-teal/10 text-teal'
+                    ? 'border-gold/25 bg-gold/10 text-gold'
                     : 'border-white/15 bg-white/5 text-white/40'
                 }`}>
                   {(item.visibility as Visibility) === 'public' ? <Eye size={11} /> : <EyeOff size={11} />}
@@ -143,7 +180,7 @@ export default async function PipelinePage() {
                     href={item.deployed_link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-teal hover:underline"
+                    className="text-gold hover:underline"
                   >
                     View →
                   </a>

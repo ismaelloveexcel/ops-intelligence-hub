@@ -15,7 +15,7 @@ import {
   SUBMISSION_TYPE_LABELS,
   isQuickWin,
 } from '@/lib/types'
-import { ExternalLink, Search, Zap, TrendingUp } from 'lucide-react'
+import { ExternalLink, Search, Zap, TrendingUp, Eye } from 'lucide-react'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -41,6 +41,7 @@ export default function AdminBoard({ rows }: { rows: AdminBoardRow[] }) {
   const [filterType, setFilterType] = useState<SubmissionType | ''>('')
   const [quickWinOnly, setQuickWinOnly] = useState(false)
   const [highPriorityOnly, setHighPriorityOnly] = useState(false)
+  const [readyToShowOnly, setReadyToShowOnly] = useState(false)
   const [sortField, setSortField] = useState<SortField>('priority_score')
   const [sortAsc, setSortAsc] = useState(false)
 
@@ -64,6 +65,7 @@ export default function AdminBoard({ rows }: { rows: AdminBoardRow[] }) {
     if (filterType) result = result.filter((r) => r.submission_type === filterType)
     if (quickWinOnly) result = result.filter((r) => isQuickWin(r.automation_potential, r.implementation_effort))
     if (highPriorityOnly) result = result.filter((r) => r.priority === 'high' || r.priority === 'urgent')
+    if (readyToShowOnly) result = result.filter((r) => r.status === 'implemented' && r.published_to_feed !== true)
 
     // Sort
     result.sort((a, b) => {
@@ -85,7 +87,7 @@ export default function AdminBoard({ rows }: { rows: AdminBoardRow[] }) {
     })
 
     return result
-  }, [rows, search, filterStatus, filterDept, filterType, quickWinOnly, highPriorityOnly, sortField, sortAsc])
+  }, [rows, search, filterStatus, filterDept, filterType, quickWinOnly, highPriorityOnly, readyToShowOnly, sortField, sortAsc])
 
   // Status counts (from full rows, not filtered) — single-pass for efficiency
   const counts = useMemo(() => {
@@ -113,7 +115,7 @@ export default function AdminBoard({ rows }: { rows: AdminBoardRow[] }) {
     }
   }
 
-  const hasFilters = search || filterStatus || filterDept || filterType || quickWinOnly || highPriorityOnly
+  const hasFilters = search || filterStatus || filterDept || filterType || quickWinOnly || highPriorityOnly || readyToShowOnly
 
   return (
     <>
@@ -127,8 +129,8 @@ export default function AdminBoard({ rows }: { rows: AdminBoardRow[] }) {
             onClick={() => setFilterStatus(filterStatus === s ? '' : s)}
             className="text-left"
           >
-            <GlassCard className={`py-3 px-2 text-center transition-colors ${filterStatus === s ? 'border-teal/50' : ''}`}>
-              <div className="text-xl font-bold text-teal">{counts[s]}</div>
+            <GlassCard className={`py-3 px-2 text-center transition-colors ${filterStatus === s ? 'border-gold/50' : ''}`}>
+              <div className="text-xl font-bold text-gold">{counts[s]}</div>
               <div className="text-white/35 text-[10px] font-mono uppercase tracking-widest mt-1">
                 {STATUS_LABELS[s]}
               </div>
@@ -217,6 +219,21 @@ export default function AdminBoard({ rows }: { rows: AdminBoardRow[] }) {
               High Priority
             </button>
 
+            {/* Ready to show toggle */}
+            <button
+              type="button"
+              aria-pressed={readyToShowOnly}
+              onClick={() => setReadyToShowOnly(!readyToShowOnly)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-mono transition-colors ${
+                readyToShowOnly
+                  ? 'border-gold/50 bg-gold/15 text-gold'
+                  : 'border-white/10 bg-white/[0.04] text-white/40 hover:text-white/60'
+              }`}
+            >
+              <Eye size={12} />
+              Ready to Show
+            </button>
+
             {hasFilters && (
               <button
                 type="button"
@@ -227,6 +244,7 @@ export default function AdminBoard({ rows }: { rows: AdminBoardRow[] }) {
                   setFilterType('')
                   setQuickWinOnly(false)
                   setHighPriorityOnly(false)
+                  setReadyToShowOnly(false)
                 }}
                 className="text-white/30 text-xs hover:text-white/60 transition-colors underline"
               >
@@ -248,7 +266,7 @@ export default function AdminBoard({ rows }: { rows: AdminBoardRow[] }) {
                 type="button"
                 onClick={() => handleSortToggle(field)}
                 className={`px-2 py-1 rounded transition-colors ${
-                  sortField === field ? 'bg-teal/15 text-teal' : 'hover:text-white/60'
+                  sortField === field ? 'bg-gold/15 text-gold' : 'hover:text-white/60'
                 }`}
               >
                 {label} {sortField === field ? (sortAsc ? '↑' : '↓') : ''}
@@ -325,11 +343,14 @@ export default function AdminBoard({ rows }: { rows: AdminBoardRow[] }) {
                       </td>
                       <td>
                         <StatusBadge status={row.status as SubmissionStatus} size="sm" />
+                        {row.status === 'implemented' && row.published_to_feed !== true && (
+                          <span className="badge badge-ready badge-sm ml-1">Ready</span>
+                        )}
                       </td>
                       <td>
                         <Link
                           href={`/admin/${row.id}`}
-                          className="inline-flex items-center gap-1 text-teal text-xs font-semibold hover:opacity-75 transition-opacity"
+                          className="inline-flex items-center gap-1 text-gold text-xs font-semibold hover:opacity-75 transition-opacity"
                         >
                           Review <ExternalLink size={11} />
                         </Link>
@@ -368,7 +389,12 @@ export default function AdminBoard({ rows }: { rows: AdminBoardRow[] }) {
                       </span>
                     )}
                   </div>
-                  <StatusBadge status={row.status as SubmissionStatus} size="sm" />
+                  <div className="flex items-center gap-1.5">
+                    <StatusBadge status={row.status as SubmissionStatus} size="sm" />
+                    {row.status === 'implemented' && row.published_to_feed !== true && (
+                      <span className="badge badge-ready badge-sm">Ready</span>
+                    )}
+                  </div>
                 </div>
                 <p className="text-white/75 text-sm leading-snug mb-2 line-clamp-3">
                   {row.description}
@@ -387,7 +413,7 @@ export default function AdminBoard({ rows }: { rows: AdminBoardRow[] }) {
                   </div>
                   <Link
                     href={`/admin/${row.id}`}
-                    className="text-teal text-xs font-semibold flex items-center gap-1"
+                    className="text-gold text-xs font-semibold flex items-center gap-1"
                   >
                     Review <ExternalLink size={11} />
                   </Link>

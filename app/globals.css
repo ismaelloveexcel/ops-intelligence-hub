@@ -4,18 +4,18 @@
 
 /* ─── CSS Variables ──────────────────────────────────────────────────────── */
 :root {
-  --bg: #07111f;
-  --surface: #0d1e32;
-  --surface-elevated: #112240;
-  --border: rgba(0, 212, 200, 0.12);
-  --border-hover: rgba(0, 212, 200, 0.3);
-  --teal: #00d4c8;
-  --teal-dim: rgba(0, 212, 200, 0.12);
+  --bg: #0B1C2C;
+  --surface: #0f2438;
+  --surface-elevated: #142d45;
+  --border: rgba(201, 166, 70, 0.12);
+  --border-hover: rgba(201, 166, 70, 0.3);
+  --accent: #C9A646;
+  --accent-dim: rgba(201, 166, 70, 0.12);
   --blue-teal: #0099cc;
   --text-primary: #ffffff;
   --text-secondary: rgba(255, 255, 255, 0.6);
   --text-muted: rgba(255, 255, 255, 0.35);
-  --gold: #c9a84c;
+  --gold: #C9A646;
   --danger: #f87171;
   --success: #4ade80;
 }
@@ -42,34 +42,36 @@ body {
 .page-bg {
   min-height: 100vh;
   background-color: var(--bg);
-  background-image: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0, 212, 200, 0.06) 0%, transparent 60%);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(201, 166, 70, 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 20%, rgba(15, 36, 56, 0.6) 0%, transparent 50%);
 }
 
 /* ─── Glassmorphic Card ───────────────────────────────────────────────────── */
 .glass-card {
-  background: rgba(13, 30, 50, 0.85);
+  background: rgba(15, 36, 56, 0.75);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   border-radius: 20px;
-  border: 1px solid rgba(0, 212, 200, 0.15);
-  box-shadow: inset 0 1px 0 rgba(0, 212, 200, 0.05), 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(201, 166, 70, 0.1);
+  box-shadow: inset 0 1px 0 rgba(201, 166, 70, 0.05), 0 8px 32px rgba(0, 0, 0, 0.35);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .glass-card:hover {
-  border-color: rgba(0, 212, 200, 0.25);
+  border-color: rgba(201, 166, 70, 0.2);
 }
 
 .glass-card--highlighted {
-  border-color: rgba(0, 212, 200, 0.3);
+  border-color: rgba(201, 166, 70, 0.25);
   box-shadow:
-    inset 0 1px 0 rgba(0, 212, 200, 0.15),
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    0 0 20px rgba(0, 212, 200, 0.08);
+    inset 0 1px 0 rgba(201, 166, 70, 0.1),
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    0 0 20px rgba(201, 166, 70, 0.05);
 }
 
 .glass-card--left-accent {
-  border-left: 3px solid var(--teal);
+  border-left: 3px solid var(--accent);
 }
 
 /* ─── Badges / Pills ─────────────────────────────────────────────────────── */
@@ -93,9 +95,9 @@ body {
 
 /* Status badges */
 .badge-new {
-  background: rgba(0, 212, 200, 0.1);
-  border: 1px solid rgba(0, 212, 200, 0.25);
-  color: #00d4c8;
+  background: rgba(201, 166, 70, 0.1);
+  border: 1px solid rgba(201, 166, 70, 0.25);
+  color: #C9A646;
 }
 .badge-reviewing {
   background: rgba(0, 153, 204, 0.12);
@@ -108,9 +110,9 @@ body {
   color: #4ade80;
 }
 .badge-in-progress {
-  background: rgba(201, 168, 76, 0.1);
-  border: 1px solid rgba(201, 168, 76, 0.3);
-  color: #c9a84c;
+  background: rgba(201, 166, 70, 0.1);
+  border: 1px solid rgba(201, 166, 70, 0.3);
+  color: #C9A646;
 }
 .badge-rejected {
   background: rgba(248, 113, 113, 0.1);
@@ -123,6 +125,13 @@ body {
   color: #4ade80;
 }
 
+/* Ready to show badge */
+.badge-ready {
+  background: rgba(201, 166, 70, 0.15);
+  border: 1px solid rgba(201, 166, 70, 0.35);
+  color: #C9A646;
+}
+
 /* Impact badges */
 .badge-impact-low {
   background: rgba(255, 255, 255, 0.05);
@@ -130,9 +139,9 @@ body {
   color: rgba(255, 255, 255, 0.55);
 }
 .badge-impact-medium {
-  background: rgba(201, 168, 76, 0.1);
-  border: 1px solid rgba(201, 168, 76, 0.25);
-  color: #c9a84c;
+  background: rgba(201, 166, 70, 0.1);
+  border: 1px solid rgba(201, 166, 70, 0.25);
+  color: #C9A646;
 }
 .badge-impact-high {
   background: rgba(248, 113, 113, 0.1);
@@ -142,9 +151,16 @@ body {
 
 /* Department badge */
 .badge-dept {
-  background: rgba(0, 212, 200, 0.08);
-  border: 1px solid rgba(0, 212, 200, 0.18);
-  color: rgba(0, 212, 200, 0.85);
+  background: rgba(201, 166, 70, 0.08);
+  border: 1px solid rgba(201, 166, 70, 0.18);
+  color: rgba(201, 166, 70, 0.85);
+}
+
+/* Attention badge */
+.badge-attention {
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  color: #f87171;
 }
 
 /* ─── Section Labels ─────────────────────────────────────────────────────── */
@@ -154,19 +170,19 @@ body {
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--teal);
+  color: var(--accent);
 }
 
 /* ─── Glow Dot ───────────────────────────────────────────────────────────── */
 .dot-glow {
-  box-shadow: 0 0 8px #00d4c8;
+  box-shadow: 0 0 8px #C9A646;
 }
 
 /* ─── Form Inputs ────────────────────────────────────────────────────────── */
 .input {
   width: 100%;
-  background: rgba(17, 34, 64, 0.8);
-  border: 1px solid rgba(0, 212, 200, 0.15);
+  background: rgba(20, 45, 69, 0.8);
+  border: 1px solid rgba(201, 166, 70, 0.12);
   border-radius: 12px;
   padding: 12px 16px;
   color: var(--text-primary);
@@ -183,8 +199,8 @@ body {
 }
 
 .input:focus {
-  border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(0, 212, 200, 0.12);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(201, 166, 70, 0.1);
 }
 
 .input:focus-visible {
@@ -197,7 +213,7 @@ textarea.input {
 }
 
 select.input {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2300d4c8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23C9A646' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
   padding-right: 44px;
@@ -205,7 +221,7 @@ select.input {
 }
 
 select.input option {
-  background: #0d1e32;
+  background: #0f2438;
   color: #fff;
 }
 
@@ -229,8 +245,8 @@ select.input option {
 }
 
 .toggle.on {
-  background: var(--teal);
-  border-color: var(--teal);
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
 .toggle-thumb {
@@ -255,21 +271,22 @@ select.input option {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: var(--teal);
-  color: #07111f;
+  background: linear-gradient(135deg, #C9A646 0%, #b8963e 100%);
+  color: #0B1C2C;
   font-weight: 700;
   font-size: 15px;
   padding: 14px 28px;
   border-radius: 12px;
   border: none;
   cursor: pointer;
-  transition: opacity 0.2s ease, transform 0.1s ease;
+  transition: opacity 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
   white-space: nowrap;
 }
 
 .btn-primary:hover {
-  opacity: 0.9;
+  opacity: 0.92;
   transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(201, 166, 70, 0.25);
 }
 
 .btn-primary:active {
@@ -288,20 +305,20 @@ select.input option {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: rgba(0, 212, 200, 0.1);
-  color: var(--teal);
+  background: rgba(201, 166, 70, 0.08);
+  color: var(--accent);
   font-weight: 600;
   font-size: 14px;
   padding: 10px 20px;
   border-radius: 10px;
-  border: 1px solid rgba(0, 212, 200, 0.25);
+  border: 1px solid rgba(201, 166, 70, 0.2);
   cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .btn-secondary:hover {
-  background: rgba(0, 212, 200, 0.16);
-  border-color: rgba(0, 212, 200, 0.4);
+  background: rgba(201, 166, 70, 0.14);
+  border-color: rgba(201, 166, 70, 0.35);
 }
 
 .btn-danger {
@@ -333,8 +350,8 @@ select.input option {
   gap: 4px;
   padding: 12px 8px;
   border-radius: 12px;
-  border: 1px solid rgba(0, 212, 200, 0.12);
-  background: rgba(13, 30, 50, 0.6);
+  border: 1px solid rgba(201, 166, 70, 0.1);
+  background: rgba(15, 36, 56, 0.6);
   color: var(--text-secondary);
   font-size: 12px;
   font-weight: 600;
@@ -344,16 +361,16 @@ select.input option {
 }
 
 .action-btn:hover {
-  border-color: rgba(0, 212, 200, 0.35);
-  color: var(--teal);
-  background: rgba(0, 212, 200, 0.06);
+  border-color: rgba(201, 166, 70, 0.3);
+  color: var(--accent);
+  background: rgba(201, 166, 70, 0.06);
 }
 
 .action-btn.active {
-  border-color: var(--teal);
-  color: var(--teal);
-  background: rgba(0, 212, 200, 0.1);
-  box-shadow: 0 0 0 1px rgba(0, 212, 200, 0.2);
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(201, 166, 70, 0.1);
+  box-shadow: 0 0 0 1px rgba(201, 166, 70, 0.15);
 }
 
 /* ─── Stat Card ──────────────────────────────────────────────────────────── */
@@ -365,7 +382,7 @@ select.input option {
 .stat-number {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--teal);
+  color: var(--accent);
   line-height: 1;
   letter-spacing: -0.03em;
 }
@@ -389,10 +406,10 @@ select.input option {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  background: rgba(7, 17, 31, 0.92);
+  background: rgba(11, 28, 44, 0.92);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(0, 212, 200, 0.1);
+  border-top: 1px solid rgba(201, 166, 70, 0.08);
   z-index: 100;
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -429,14 +446,14 @@ select.input option {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: var(--teal);
-  box-shadow: 0 0 6px var(--teal);
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
 }
 
 /* ─── Feed Item ──────────────────────────────────────────────────────────── */
 .feed-item {
   padding: 20px 24px;
-  border-bottom: 1px solid rgba(0, 212, 200, 0.06);
+  border-bottom: 1px solid rgba(201, 166, 70, 0.06);
 }
 
 .feed-item:last-child {
@@ -457,13 +474,13 @@ select.input option {
   color: var(--text-muted);
   text-align: left;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(0, 212, 200, 0.08);
+  border-bottom: 1px solid rgba(201, 166, 70, 0.08);
   white-space: nowrap;
 }
 
 .admin-table td {
   padding: 14px 16px;
-  border-bottom: 1px solid rgba(0, 212, 200, 0.05);
+  border-bottom: 1px solid rgba(201, 166, 70, 0.05);
   vertical-align: middle;
   font-size: 14px;
   color: var(--text-secondary);
@@ -474,12 +491,12 @@ select.input option {
 }
 
 .admin-table tr.row-new td:first-child {
-  border-left: 3px solid var(--teal);
+  border-left: 3px solid var(--accent);
   padding-left: 13px;
 }
 
 .admin-table tr:hover td {
-  background: rgba(0, 212, 200, 0.02);
+  background: rgba(201, 166, 70, 0.02);
 }
 
 /* ─── Scrollbar ──────────────────────────────────────────────────────────── */
@@ -493,17 +510,17 @@ select.input option {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 212, 200, 0.2);
+  background: rgba(201, 166, 70, 0.2);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 212, 200, 0.35);
+  background: rgba(201, 166, 70, 0.35);
 }
 
 /* ─── Utility ────────────────────────────────────────────────────────────── */
-.teal-gradient-text {
-  background: linear-gradient(135deg, #00d4c8 0%, #0099cc 100%);
+.gold-gradient-text {
+  background: linear-gradient(135deg, #C9A646 0%, #e0c06a 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -515,7 +532,7 @@ select.input option {
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--teal);
+  color: var(--accent);
 }
 
 /* Page bottom padding for BottomNav */

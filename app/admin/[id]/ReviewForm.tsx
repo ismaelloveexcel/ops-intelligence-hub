@@ -236,7 +236,7 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
         </div>
 
         {/* Description */}
-        <p className="text-white/80 text-sm leading-relaxed mb-4 border-l-2 border-teal/30 pl-4">
+        <p className="text-white/80 text-sm leading-relaxed mb-4 border-l-2 border-gold/30 pl-4">
           {row.description}
         </p>
 
@@ -277,9 +277,9 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
               </div>
             )}
             {priorityScore != null && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-teal/10 border border-teal/20">
-                <TrendingUp size={14} className="text-teal" />
-                <span className="text-teal text-sm font-semibold">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gold/10 border border-gold/20">
+                <TrendingUp size={14} className="text-gold" />
+                <span className="text-gold text-sm font-semibold">
                   Priority Score: {priorityScore}
                 </span>
               </div>
@@ -477,16 +477,22 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
           </SelectInput>
         </div>
 
-        {/* Admin notes */}
+        {/* Private notes to self */}
         <div className="flex flex-col gap-1.5 mb-5">
-          <label className="mono-label">Admin Notes</label>
+          <div className="flex items-center gap-2">
+            <label className="mono-label">Private Notes to Self</label>
+            <span className="text-white/40 text-[10px] font-mono border border-white/10 rounded px-1.5 py-0.5">OPERATOR ONLY</span>
+          </div>
           <textarea
             value={adminNotes}
             onChange={(e) => setAdminNotes(e.target.value)}
-            placeholder="Internal notes, context, decision rationale…"
-            rows={3}
+            placeholder="Thinking, reminders, approach notes… (not visible publicly)"
+            rows={4}
             className="input text-sm"
           />
+          <p className="text-white/25 text-xs">
+            These notes are only visible in the admin panel. Never shown publicly.
+          </p>
         </div>
 
         {/* Save messages */}
@@ -604,7 +610,7 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-mono transition-colors ${
                       feedVisibility === v
                         ? v === 'public'
-                          ? 'border-teal/40 bg-teal/15 text-teal'
+                          ? 'border-gold/40 bg-gold/15 text-gold'
                           : 'border-white/30 bg-white/10 text-white/70'
                         : 'border-white/10 bg-white/5 text-white/30 hover:border-white/20'
                     }`}
@@ -648,7 +654,7 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
       <GlassCard className="p-6">
         <div className="flex items-center justify-between mb-4">
           <p className="mono-label">Move to Execution</p>
-          <Rocket size={16} className="text-teal/50" />
+          <Rocket size={16} className="text-gold/50" />
         </div>
         <p className="text-white/45 text-xs mb-4 leading-relaxed">
           Create a pipeline item from this submission to track its implementation.

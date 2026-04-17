@@ -11,8 +11,8 @@ export default function SubmitDonePage() {
           {/* Icon */}
           <div className="flex items-center justify-center mb-6">
             <div className="relative">
-              <div className="w-16 h-16 rounded-full bg-teal/10 border border-teal/25 flex items-center justify-center">
-                <CheckCircle size={32} className="text-teal" />
+              <div className="w-16 h-16 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center">
+                <CheckCircle size={32} className="text-gold" />
               </div>
               <span className="absolute -top-1 -right-1">
                 <ImpactDot size="md" />
@@ -28,7 +28,7 @@ export default function SubmitDonePage() {
           <p className="text-white/55 text-sm leading-relaxed mb-8">
             Your submission has been logged and will be reviewed by the operations team.
             You&apos;ll see the outcome in the{' '}
-            <Link href="/updates" className="text-teal underline underline-offset-2">
+            <Link href="/updates" className="text-gold underline underline-offset-2">
               Updates feed
             </Link>{' '}
             once it&apos;s actioned.
@@ -39,15 +39,15 @@ export default function SubmitDonePage() {
             <p className="mono-label mb-3">What happens next</p>
             <ol className="space-y-2 text-sm text-white/55">
               <li className="flex gap-2">
-                <span className="text-teal font-mono font-bold shrink-0">01</span>
+                <span className="text-gold font-mono font-bold shrink-0">01</span>
                 Admin reviews your submission within 48 hours.
               </li>
               <li className="flex gap-2">
-                <span className="text-teal font-mono font-bold shrink-0">02</span>
+                <span className="text-gold font-mono font-bold shrink-0">02</span>
                 It&apos;s triaged, assigned, and tracked.
               </li>
               <li className="flex gap-2">
-                <span className="text-teal font-mono font-bold shrink-0">03</span>
+                <span className="text-gold font-mono font-bold shrink-0">03</span>
                 When fixed, it appears in the &quot;From Feedback to Action&quot; feed.
               </li>
             </ol>

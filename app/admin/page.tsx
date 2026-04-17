@@ -39,7 +39,7 @@ export default async function AdminPage() {
             {rows.length} total submission{rows.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gold/25 bg-gold/8 text-gold text-xs font-mono">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gold/25 bg-gold/[0.08] text-gold text-xs font-mono">
           <ShieldAlert size={13} />
           Admin only
         </div>

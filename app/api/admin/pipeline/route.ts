@@ -52,6 +52,8 @@ export async function POST(req: NextRequest) {
     }
     const pipelineVisibility: Visibility = pipelineVisibilityValue as Visibility
 
+    const now = new Date().toISOString()
+
     const { data, error } = await supabaseAdmin
       .from('execution_pipeline')
       .insert({
@@ -66,6 +68,7 @@ export async function POST(req: NextRequest) {
         after_time: after_time ?? null,
         actual_hours_saved: actual_hours_saved ?? null,
         notes: notes?.trim() || null,
+        updated_at: now,
       })
       .select('id')
       .single()

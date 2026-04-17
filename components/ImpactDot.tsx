@@ -25,7 +25,7 @@ export default function ImpactDot({
 
   return (
     <span
-      className={`inline-block rounded-full bg-teal ${sizeMap[size]} dot-glow ${className}`}
+      className={`inline-block rounded-full bg-gold ${sizeMap[size]} dot-glow ${className}`}
     />
   )
 }

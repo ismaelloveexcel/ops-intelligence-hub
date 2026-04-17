@@ -57,6 +57,10 @@ const ALLOWED_RANGE_DAYS: Record<string, number> = {
 const DEFAULT_RANGE_DAYS = 30
 const MAX_CUSTOM_RANGE_DAYS = 90
 const MS_PER_DAY = 86400000
+const DESC_MAX_LEN = 80
+const DESC_TRUNCATE_AT = 77
+const DESC_SHORT_MAX = 70
+const DESC_SHORT_TRUNCATE = 67
 
 function parseReportWindow(
   range: string | null,
@@ -213,76 +217,75 @@ function generateWeeklySnapshot(
 
   const lines: string[] = []
   lines.push('WEEKLY OPERATIONS SNAPSHOT')
-  lines.push('═'.repeat(40))
+  lines.push('─'.repeat(40))
   lines.push('')
 
-  lines.push('1. KEY OBSERVATIONS')
-  lines.push(`   • ${totalSubmissions} new submission${totalSubmissions !== 1 ? 's' : ''} received`)
+  lines.push('KEY METRICS')
+  lines.push(`  • ${totalSubmissions} submission${totalSubmissions !== 1 ? 's' : ''} received`)
   if (topDepts.length > 0) {
-    lines.push(`   • Top departments: ${topDepts.map(([d, c]) => `${d} (${c})`).join(', ')}`)
+    lines.push(`  • Top departments: ${topDepts.map(([d, c]) => `${d} (${c})`).join(', ')}`)
   }
   if (highFrustration.length > 0) {
-    lines.push(`   • ${highFrustration.length} high-frustration item${highFrustration.length !== 1 ? 's' : ''} flagged (level 4–5)`)
+    lines.push(`  • ${highFrustration.length} high-frustration item${highFrustration.length !== 1 ? 's' : ''} (level 4–5)`)
   }
   lines.push('')
 
-  lines.push('2. BOTTLENECKS IDENTIFIED')
+  lines.push('BOTTLENECKS')
   if (totalHoursWasted > 0) {
-    lines.push(`   • Estimated ${totalHoursWasted.toFixed(1)} hours/month wasted across reported issues`)
+    lines.push(`  • ${totalHoursWasted.toFixed(1)}h/month wasted across reported issues`)
   }
   const topBottlenecks = [...board]
     .sort((a, b) => (b.hours_wasted_month ?? 0) - (a.hours_wasted_month ?? 0))
     .slice(0, 3)
   if (topBottlenecks.length > 0) {
-    lines.push('   • Top bottlenecks:')
     for (const b of topBottlenecks) {
-      const desc = b.description.length > 80 ? b.description.slice(0, 77) + '...' : b.description
-      lines.push(`     – ${desc} (${(b.hours_wasted_month ?? 0).toFixed(1)}h/mo)`)
+      const desc = b.description.length > DESC_MAX_LEN ? b.description.slice(0, DESC_TRUNCATE_AT) + '…' : b.description
+      lines.push(`  • ${desc} — ${(b.hours_wasted_month ?? 0).toFixed(1)}h/mo`)
     }
   } else {
-    lines.push('   • No bottleneck data available for this period')
+    lines.push('  • No bottleneck data for this period')
   }
   lines.push('')
 
-  lines.push('3. ACTIONS TAKEN')
-  lines.push(`   • ${actionsCompleted} fix${actionsCompleted !== 1 ? 'es' : ''} published to the feed`)
-  lines.push(`   • ${deployed} pipeline item${deployed !== 1 ? 's' : ''} deployed`)
+  lines.push('ACTIONS COMPLETED')
+  lines.push(`  • ${actionsCompleted} fix${actionsCompleted !== 1 ? 'es' : ''} published`)
+  lines.push(`  • ${deployed} deployment${deployed !== 1 ? 's' : ''}`)
   if (feed.length > 0) {
     for (const f of feed.slice(0, 3)) {
-      lines.push(`     – ${f.title}`)
+      lines.push(`    → ${f.title}`)
     }
   }
   lines.push('')
 
-  lines.push('4. AUTOMATIONS IN PROGRESS')
-  lines.push(`   • ${inProgress} item${inProgress !== 1 ? 's' : ''} currently in progress`)
+  lines.push('IN PROGRESS')
+  lines.push(`  • ${inProgress} active item${inProgress !== 1 ? 's' : ''}`)
   const activePipeline = pipeline.filter(p => ['in_progress', 'testing', 'planned'].includes(p.status))
   if (activePipeline.length > 0) {
     for (const p of activePipeline.slice(0, 3)) {
-      lines.push(`     – ${p.title} (${p.status.replace('_', ' ')})`)
+      lines.push(`    → ${p.title} (${p.status.replace('_', ' ')})`)
     }
   }
   lines.push('')
 
-  lines.push('5. IMPACT')
-  lines.push(`   • ${combinedHoursSaved.toFixed(1)} hours saved in this period`)
+  lines.push('IMPACT')
+  lines.push(`  • ${combinedHoursSaved.toFixed(1)}h saved this period`)
   if (feed.length > 0) {
-    lines.push(`   • ${feed.length} improvement${feed.length !== 1 ? 's' : ''} communicated to employees`)
+    lines.push(`  • ${feed.length} improvement${feed.length !== 1 ? 's' : ''} communicated`)
   }
   lines.push('')
 
-  lines.push('6. NEXT PRIORITIES')
+  lines.push('NEXT PRIORITIES')
   const pending = board
     .filter(r => ['new', 'reviewing'].includes(r.status))
     .sort((a, b) => (b.priority_score ?? 0) - (a.priority_score ?? 0))
     .slice(0, 3)
   if (pending.length > 0) {
     for (const p of pending) {
-      const desc = p.description.length > 80 ? p.description.slice(0, 77) + '...' : p.description
-      lines.push(`   • ${desc}`)
+      const desc = p.description.length > DESC_MAX_LEN ? p.description.slice(0, DESC_TRUNCATE_AT) + '…' : p.description
+      lines.push(`  • ${desc}`)
     }
   } else {
-    lines.push('   • All current items are in progress or completed')
+    lines.push('  • All items in progress or completed')
   }
 
   return lines.join('\n')
@@ -308,69 +311,68 @@ function generateAutomationSummary(
 
   const lines: string[] = []
   lines.push('AUTOMATION PIPELINE SUMMARY')
-  lines.push('═'.repeat(40))
+  lines.push('─'.repeat(40))
   lines.push('')
 
-  lines.push('1. KEY OBSERVATIONS')
-  lines.push(`   • ${automationCandidates.length} submission${automationCandidates.length !== 1 ? 's' : ''} categorised as automation opportunities`)
-  lines.push(`   • ${quickWins.length} quick win${quickWins.length !== 1 ? 's' : ''} identified (high potential + low effort)`)
-  lines.push(`   • ${pipeline.length} item${pipeline.length !== 1 ? 's' : ''} in the execution pipeline`)
+  lines.push('OVERVIEW')
+  lines.push(`  • ${automationCandidates.length} automation opportunit${automationCandidates.length !== 1 ? 'ies' : 'y'} identified`)
+  lines.push(`  • ${quickWins.length} quick win${quickWins.length !== 1 ? 's' : ''} (high potential, low effort)`)
+  lines.push(`  • ${pipeline.length} item${pipeline.length !== 1 ? 's' : ''} in pipeline`)
   lines.push('')
 
-  lines.push('2. BOTTLENECKS IDENTIFIED')
+  lines.push('HIGH POTENTIAL ITEMS')
   if (highPotential.length > 0) {
-    lines.push('   • High automation potential items:')
     for (const h of highPotential.slice(0, 5)) {
-      const desc = h.description.length > 70 ? h.description.slice(0, 67) + '...' : h.description
-      lines.push(`     – ${desc} (potential: ${h.automation_potential}/5)`)
+      const desc = h.description.length > DESC_SHORT_MAX ? h.description.slice(0, DESC_SHORT_TRUNCATE) + '…' : h.description
+      lines.push(`  • ${desc} — potential: ${h.automation_potential}/5`)
     }
   } else {
-    lines.push('   • No high-potential automation items identified yet')
+    lines.push('  • None identified yet')
   }
   lines.push('')
 
-  lines.push('3. ACTIONS TAKEN')
+  lines.push('DEPLOYED')
   const deployed = pipelineByStatus['deployed'] ?? []
-  lines.push(`   • ${deployed.length} automation${deployed.length !== 1 ? 's' : ''} deployed`)
+  lines.push(`  • ${deployed.length} automation${deployed.length !== 1 ? 's' : ''} live`)
   for (const d of deployed.slice(0, 3)) {
     const tool = d.tool_used ? ` (${d.tool_used})` : ''
-    lines.push(`     – ${d.title}${tool}`)
+    lines.push(`    → ${d.title}${tool}`)
   }
   lines.push('')
 
-  lines.push('4. AUTOMATIONS IN PROGRESS')
+  lines.push('IN PROGRESS')
   const active = [...(pipelineByStatus['in_progress'] ?? []), ...(pipelineByStatus['testing'] ?? [])]
-  lines.push(`   • ${active.length} automation${active.length !== 1 ? 's' : ''} being built or tested`)
+  lines.push(`  • ${active.length} automation${active.length !== 1 ? 's' : ''} in development`)
   for (const a of active.slice(0, 3)) {
     const tool = a.tool_used ? ` using ${a.tool_used}` : ''
-    lines.push(`     – ${a.title} (${a.status.replace('_', ' ')})${tool}`)
+    lines.push(`    → ${a.title} (${a.status.replace('_', ' ')})${tool}`)
   }
   lines.push('')
 
-  lines.push('5. IMPACT')
-  lines.push(`   • ${totalPipelineHours.toFixed(1)} hours saved from deployed automations`)
+  lines.push('IMPACT')
+  lines.push(`  • ${totalPipelineHours.toFixed(1)}h saved from deployed automations`)
   if (quickWins.length > 0) {
     const potentialHours = quickWins.reduce((sum, r) => sum + (r.hours_wasted_month ?? 0), 0)
-    lines.push(`   • ${potentialHours.toFixed(1)} hours/month could be recovered from identified quick wins`)
+    lines.push(`  • ${potentialHours.toFixed(1)}h/month recoverable from quick wins`)
   }
   lines.push('')
 
-  lines.push('6. NEXT PRIORITIES')
+  lines.push('NEXT PRIORITIES')
   const planned = pipelineByStatus['planned'] ?? []
   if (planned.length > 0) {
     for (const p of planned.slice(0, 3)) {
-      lines.push(`   • ${p.title}`)
+      lines.push(`  • ${p.title}`)
     }
   }
   if (quickWins.length > 0) {
-    lines.push('   • Quick wins to action:')
+    lines.push('  Quick wins to action:')
     for (const q of quickWins.slice(0, 3)) {
-      const desc = q.description.length > 70 ? q.description.slice(0, 67) + '...' : q.description
-      lines.push(`     – ${desc}`)
+      const desc = q.description.length > DESC_SHORT_MAX ? q.description.slice(0, DESC_SHORT_TRUNCATE) + '…' : q.description
+      lines.push(`    → ${desc}`)
     }
   }
   if (planned.length === 0 && quickWins.length === 0) {
-    lines.push('   • Review new submissions for automation opportunities')
+    lines.push('  • Review submissions for automation opportunities')
   }
 
   return lines.join('\n')
@@ -396,74 +398,72 @@ function generateLeadershipUpdate(
   }
 
   const lines: string[] = []
-  lines.push('LEADERSHIP UPDATE DRAFT')
-  lines.push('═'.repeat(40))
+  lines.push('LEADERSHIP UPDATE')
+  lines.push('─'.repeat(40))
   lines.push('')
 
-  lines.push('1. KEY OBSERVATIONS')
-  lines.push(`   • ${totalSubmissions} employee submission${totalSubmissions !== 1 ? 's' : ''} received this period`)
-  lines.push(`   • Active engagement from ${Object.keys(deptCounts).length} department${Object.keys(deptCounts).length !== 1 ? 's' : ''}`)
-  lines.push(`   • Employee feedback is being used to prioritise operational improvements`)
+  lines.push('ENGAGEMENT')
+  lines.push(`  • ${totalSubmissions} employee submission${totalSubmissions !== 1 ? 's' : ''} this period`)
+  lines.push(`  • Active input from ${Object.keys(deptCounts).length} department${Object.keys(deptCounts).length !== 1 ? 's' : ''}`)
+  lines.push(`  • Feedback drives prioritisation of operational improvements`)
   lines.push('')
 
-  lines.push('2. BOTTLENECKS IDENTIFIED')
+  lines.push('KEY ISSUES')
   if (totalHoursWasted > 0) {
-    lines.push(`   • ${totalHoursWasted.toFixed(1)} estimated hours/month identified as wasted across submissions`)
+    lines.push(`  • ${totalHoursWasted.toFixed(1)}h/month identified as wasted`)
   }
   const topIssues = [...board]
     .sort((a, b) => (b.priority_score ?? 0) - (a.priority_score ?? 0))
     .slice(0, 3)
   if (topIssues.length > 0) {
-    lines.push('   • Highest-priority areas:')
     for (const t of topIssues) {
       const process = t.process_name ? ` (${t.process_name})` : ''
-      const desc = t.description.length > 70 ? t.description.slice(0, 67) + '...' : t.description
-      lines.push(`     – ${desc}${process}`)
+      const desc = t.description.length > DESC_SHORT_MAX ? t.description.slice(0, DESC_SHORT_TRUNCATE) + '…' : t.description
+      lines.push(`  • ${desc}${process}`)
     }
   }
   lines.push('')
 
-  lines.push('3. ACTIONS TAKEN')
-  lines.push(`   • ${feed.length} improvement${feed.length !== 1 ? 's' : ''} completed and communicated to staff`)
-  lines.push(`   • ${deployed} solution${deployed !== 1 ? 's' : ''} deployed`)
+  lines.push('ACTIONS COMPLETED')
+  lines.push(`  • ${feed.length} improvement${feed.length !== 1 ? 's' : ''} completed and communicated`)
+  lines.push(`  • ${deployed} solution${deployed !== 1 ? 's' : ''} deployed`)
   if (feed.length > 0) {
-    lines.push('   • Recent improvements:')
     for (const f of feed.slice(0, 3)) {
-      lines.push(`     – ${f.title}`)
+      lines.push(`    → ${f.title}`)
     }
   }
   lines.push('')
 
-  lines.push('4. AUTOMATIONS IN PROGRESS')
-  lines.push(`   • ${inProgress} solution${inProgress !== 1 ? 's' : ''} currently being developed or tested`)
+  lines.push('IN DEVELOPMENT')
+  lines.push(`  • ${inProgress} solution${inProgress !== 1 ? 's' : ''} in progress`)
   const activePipeline = pipeline.filter(p => ['in_progress', 'testing'].includes(p.status))
   for (const p of activePipeline.slice(0, 3)) {
-    lines.push(`     – ${p.title}`)
+    lines.push(`    → ${p.title}`)
   }
   lines.push('')
 
-  lines.push('5. IMPACT')
-  lines.push(`   • ${totalHoursSaved.toFixed(1)} hours saved through improvements this period`)
+  lines.push('IMPACT')
+  lines.push(`  • ${totalHoursSaved.toFixed(1)}h saved this period`)
   if (totalHoursWasted > 0 && totalHoursSaved > 0) {
     const ratio = ((totalHoursSaved / totalHoursWasted) * 100).toFixed(0)
-    lines.push(`   • Recovery rate: ${ratio}% of identified waste addressed`)
+    lines.push(`  • Recovery rate: ${ratio}% of identified waste addressed`)
   }
-  lines.push(`   • Employee-reported issues are being resolved and communicated transparently`)
+  lines.push(`  • Issues resolved and communicated transparently`)
   lines.push('')
 
-  lines.push('6. NEXT PRIORITIES')
+  lines.push('NEXT PRIORITIES')
   const upcoming = board
     .filter(r => ['accepted', 'new', 'reviewing'].includes(r.status))
     .sort((a, b) => (b.priority_score ?? 0) - (a.priority_score ?? 0))
     .slice(0, 3)
   if (upcoming.length > 0) {
     for (const u of upcoming) {
-      const desc = u.description.length > 70 ? u.description.slice(0, 67) + '...' : u.description
-      lines.push(`   • ${desc}`)
+      const desc = u.description.length > DESC_SHORT_MAX ? u.description.slice(0, DESC_SHORT_TRUNCATE) + '…' : u.description
+      lines.push(`  • ${desc}`)
     }
   } else {
-    lines.push('   • Continue reviewing incoming submissions')
-    lines.push('   • Focus on deploying in-progress solutions')
+    lines.push('  • Continue reviewing incoming submissions')
+    lines.push('  • Deploy in-progress solutions')
   }
 
   return lines.join('\n')

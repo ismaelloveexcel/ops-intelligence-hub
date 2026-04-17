@@ -49,6 +49,9 @@ export async function PATCH(
       )
     }
 
+    // Always bump updated_at on any change
+    updates.updated_at = new Date().toISOString()
+
     const { error } = await supabaseAdmin
       .from('execution_pipeline')
       .update(updates)
