@@ -34,8 +34,8 @@ async function getStuckPipeline(): Promise<ExecutionPipelineItem[]> {
       .from('execution_pipeline')
       .select('*')
       .eq('status', 'in_progress')
-      .lt('created_at', cutoffDate)
-      .order('created_at', { ascending: true })
+      .lt('updated_at', cutoffDate)
+      .order('updated_at', { ascending: true })
     return (data ?? []) as ExecutionPipelineItem[]
   } catch {
     return []
@@ -154,7 +154,7 @@ export default async function AttentionPage() {
         ) : (
           <div className="flex flex-col gap-2">
             {stuckPipeline.map((item) => {
-              const age = daysAgo(item.created_at)
+              const age = daysAgo(item.updated_at)
               const isUrgent = age >= 10
               return (
                 <GlassCard key={item.id} className={`p-4 ${isUrgent ? 'border-danger/30' : 'border-gold/15'}`}>
@@ -163,7 +163,7 @@ export default async function AttentionPage() {
                     <div className="flex items-center gap-1 shrink-0">
                       <Clock size={12} className={isUrgent ? 'text-danger' : 'text-gold'} />
                       <span className={`text-xs font-mono ${isUrgent ? 'text-danger' : 'text-gold'}`}>
-                        {age}d in progress
+                        {age}d since update
                       </span>
                     </div>
                   </div>
@@ -172,7 +172,7 @@ export default async function AttentionPage() {
                       {EXECUTION_STATUS_LABELS[item.status as ExecutionStatus]}
                     </span>
                     {item.tool_used && <span>Tool: {item.tool_used}</span>}
-                    <span>Created: {formatDate(item.created_at)}</span>
+                    <span>Last updated: {formatDate(item.updated_at)}</span>
                   </div>
                   {item.notes && (
                     <p className="text-white/35 text-xs mt-2 line-clamp-2">{item.notes}</p>

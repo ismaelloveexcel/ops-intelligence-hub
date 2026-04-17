@@ -105,6 +105,7 @@ export interface FeedItem {
 export interface ExecutionPipelineItem {
   id: string
   created_at: string
+  updated_at: string
   linked_submission_id: string | null
   title: string
   solution_type: string | null
