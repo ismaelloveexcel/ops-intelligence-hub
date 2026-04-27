@@ -103,7 +103,7 @@ export default function SettingsPage() {
                 type="email"
                 value={resendFrom}
                 onChange={(e) => setResendFrom(e.target.value)}
-                placeholder="noreply@arieFinance.com"
+                placeholder="noreply@ariefinance.com"
                 className="input"
               />
             </div>
