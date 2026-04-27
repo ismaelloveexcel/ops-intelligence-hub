@@ -119,11 +119,17 @@ export default function NotesPage() {
           ) : (
             <div className="flex flex-col gap-2">
               {notes.map((note) => (
-                <GlassCard
+                <div
                   key={note.id}
-                  className={`p-3 cursor-pointer hover:border-gold/20 transition-colors ${activeId === note.id ? 'border-gold/25 bg-gold/[0.05]' : ''}`}
+                  role="button"
+                  tabIndex={0}
+                  className="cursor-pointer"
                   onClick={() => openNote(note)}
+                  onKeyDown={(e) => e.key === 'Enter' && openNote(note)}
                 >
+                  <GlassCard
+                    className={`p-3 hover:border-gold/20 transition-colors ${activeId === note.id ? 'border-gold/25 bg-gold/[0.05]' : ''}`}
+                  >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <p className="text-white/70 text-sm truncate">{note.title}</p>
@@ -138,7 +144,8 @@ export default function NotesPage() {
                       </button>
                     </div>
                   </div>
-                </GlassCard>
+                  </GlassCard>
+                </div>
               ))}
             </div>
           )}

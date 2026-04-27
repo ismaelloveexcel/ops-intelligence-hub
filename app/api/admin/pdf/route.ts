@@ -178,16 +178,17 @@ export async function GET(req: NextRequest) {
 
     // ── Render PDF ───────────────────────────────────────────────────────────
     const { renderToBuffer } = await import('@react-pdf/renderer')
-    const React = await import('react')
+    const ReactModule = await import('react')
     const { ReportPDF } = await import('@/lib/pdf/report-template')
 
-    const pdfBuffer = await renderToBuffer(
-      React.default.createElement(ReportPDF, { data: pdfData })
-    )
+    // renderToBuffer accepts a React element
+    const element = ReactModule.default.createElement(ReportPDF, { data: pdfData })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdfBuffer = await renderToBuffer(element as any)
 
     const filename = `arie-ops-report-week${pdfData.weekNumber}-${pdfData.year}.pdf`
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(pdfBuffer as unknown as BodyInit, {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${filename}"`,

@@ -566,7 +566,7 @@ export function ReportPDF({ data }: { data: PDFReportData }) {
                         : risk.description}
                     </Text>
                     <Text style={styles.riskMeta}>
-                      {risk.department} · Open {risk.days_open ?? risk.daysOpen} days
+                      {risk.department} · Open {risk.daysOpen} days
                       {risk.urgency != null ? ` · Urgency ${risk.urgency}/10` : ''}
                     </Text>
                     {(risk.affectsClient || risk.involvesMoney) && (

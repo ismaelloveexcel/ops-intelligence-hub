@@ -55,7 +55,7 @@ export default function NotificationsPage() {
         const d = await res.json()
         throw new Error(d.error ?? 'Send failed')
       }
-      setSent((p) => new Set([...p, item.submissionId]))
+      setSent((p) => new Set(Array.from(p).concat(item.submissionId)))
     } catch (err) {
       setErrors((p) => ({
         ...p,
@@ -134,7 +134,7 @@ export default function NotificationsPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setDismissed((p) => new Set([...p, item.submissionId]))}
+                    onClick={() => setDismissed((p) => new Set(Array.from(p).concat(item.submissionId)))}
                     className="text-white/25 hover:text-white/55 transition-colors"
                     title="Dismiss"
                   >
@@ -187,7 +187,7 @@ export default function NotificationsPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setDismissed((p) => new Set([...p, item.submissionId]))}
+                    onClick={() => setDismissed((p) => new Set(Array.from(p).concat(item.submissionId)))}
                     className="btn-secondary text-sm py-2"
                   >
                     Dismiss
