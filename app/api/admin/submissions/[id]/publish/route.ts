@@ -14,7 +14,7 @@ export async function POST(
 
   try {
     const body = await req.json()
-    const { title, what_changed, hours_saved, before_summary, after_summary, visibility } = body
+    const { title, what_changed, hours_saved, before_summary, after_summary, visibility, shoutout } = body
 
     if (!title || typeof title !== 'string' || title.trim().length === 0) {
       return NextResponse.json({ error: 'Title is required.' }, { status: 400 })
@@ -23,10 +23,10 @@ export async function POST(
       return NextResponse.json({ error: 'What changed is required.' }, { status: 400 })
     }
 
-    // Fetch the submission to get department
+    // Fetch the submission to get department + ai_kpi_area
     const { data: submission, error: fetchError } = await supabaseAdmin
       .from('submissions')
-      .select('department')
+      .select('department, ai_kpi_area, kpi_area')
       .eq('id', params.id)
       .single()
 
@@ -54,6 +54,8 @@ export async function POST(
       before_summary: before_summary?.trim() || null,
       after_summary: after_summary?.trim() || null,
       visibility: feedVisibility,
+      kpi_area: submission.kpi_area ?? submission.ai_kpi_area ?? null,
+      shoutout: shoutout?.trim() || null,
     })
 
     if (feedError) {

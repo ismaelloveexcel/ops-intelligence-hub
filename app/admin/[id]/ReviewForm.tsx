@@ -18,6 +18,7 @@ import {
   ReviewCategory,
   ImplementationEffort,
   Visibility,
+  KpiArea,
   ACTION_TYPE_LABELS,
   PRIORITY_LABELS,
   EASE_LABELS,
@@ -27,9 +28,12 @@ import {
   IMPLEMENTATION_EFFORT_LABELS,
   SUBMISSION_TYPE_LABELS,
   VISIBILITY_LABELS,
+  KPI_AREA_LABELS,
+  KPI_AREAS,
   SubmissionType,
   calcHoursWastedMonth,
   calcPriorityScore,
+  urgencyColor,
 } from '@/lib/types'
 import {
   Zap,
@@ -47,6 +51,8 @@ import {
   Rocket,
   Eye,
   EyeOff,
+  Sparkles,
+  CopyCheck,
 } from 'lucide-react'
 
 // ─── Action Icon Map ──────────────────────────────────────────────────────────
@@ -113,6 +119,9 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
     row.estimated_hours_saved_monthly != null ? String(row.estimated_hours_saved_monthly) : ''
   )
 
+  // AI tracking
+  const [aiAssisted, setAiAssisted] = useState(row.ai_assisted ?? false)
+
   // Publish form state
   const [feedTitle, setFeedTitle] = useState('')
   const [feedWhatChanged, setFeedWhatChanged] = useState('')
@@ -120,6 +129,7 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
   const [feedBeforeSummary, setFeedBeforeSummary] = useState('')
   const [feedAfterSummary, setFeedAfterSummary] = useState('')
   const [feedVisibility, setFeedVisibility] = useState<Visibility>('private')
+  const [feedShoutout, setFeedShoutout] = useState('')
 
   // Loading states
   const [savingReview, setSavingReview] = useState(false)
@@ -138,6 +148,44 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
   const priorityScore = calcPriorityScore(
     hoursWastedMonth, automationPotential, row.frustration_level
   )
+
+  // ─── AI Apply helpers ───────────────────────────────────────────────────────
+
+  function applyAiSuggestion(field: string) {
+    if (!row.ai_kpi_area && !row.ai_urgency_score && !row.ai_suggested_action) return
+    setAiAssisted(true)
+    if (field === 'kpi_area' || field === 'all') {
+      // kpi_area is set at submission level; here we just use it as a hint
+    }
+    if (field === 'automation_potential' || field === 'all') {
+      if (row.ai_urgency_score) {
+        // Map urgency 1-10 to automation_potential 1-5 (rough correlation)
+        setAutomationPotential(Math.min(5, Math.ceil(row.ai_urgency_score / 2)))
+      }
+    }
+    if (field === 'review_category' || field === 'all') {
+      const suggestedAction = row.ai_suggested_action?.toLowerCase() ?? ''
+      if (suggestedAction.includes('automat')) setReviewCategory('automation')
+      else if (suggestedAction.includes('train') || suggestedAction.includes('guid')) setReviewCategory('training')
+      else if (suggestedAction.includes('process') || suggestedAction.includes('sop')) setReviewCategory('process')
+    }
+    if (field === 'priority' || field === 'all') {
+      const score = row.ai_urgency_score ?? 0
+      if (score >= 8) setPriority('urgent')
+      else if (score >= 6) setPriority('high')
+      else if (score >= 4) setPriority('medium')
+      else setPriority('low')
+    }
+    if (field === 'notes' || field === 'all') {
+      const aiNote = [
+        row.ai_suggested_action ? `AI suggestion: ${row.ai_suggested_action}` : '',
+        row.ai_reasoning ? `Reasoning: ${row.ai_reasoning}` : '',
+      ].filter(Boolean).join('\n')
+      if (aiNote && !adminNotes.includes('AI suggestion:')) {
+        setAdminNotes(prev => prev ? `${prev}\n\n${aiNote}` : aiNote)
+      }
+    }
+  }
 
   // ─── Save review ───────────────────────────────────────────────────────────
 
@@ -163,6 +211,7 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
           review_category: reviewCategory || null,
           impact_level: impactLevel || null,
           estimated_hours_saved_monthly: estHoursSaved ? parseFloat(estHoursSaved) : null,
+          ai_assisted: aiAssisted,
         }),
       })
       if (!res.ok) throw new Error((await res.json()).error ?? 'Save failed')
@@ -196,6 +245,7 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
           before_summary: feedBeforeSummary.trim() || null,
           after_summary: feedAfterSummary.trim() || null,
           visibility: feedVisibility,
+          shoutout: feedShoutout.trim() || null,
         }),
       })
       if (!res.ok) throw new Error((await res.json()).error ?? 'Publish failed')
@@ -311,6 +361,88 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
           {row.reviewed_at && <span>Last reviewed: {formatDate(row.reviewed_at)}</span>}
         </div>
       </GlassCard>
+
+      {/* ── AI Analysis Panel ──────────────────────────────────────────────── */}
+      {row.ai_classified_at && (
+        <GlassCard className="p-5 border-gold/20">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Sparkles size={14} className="text-gold" />
+              <p className="mono-label">AI Analysis</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => applyAiSuggestion('all')}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/25 text-gold text-xs font-mono hover:bg-gold/18 transition-colors"
+            >
+              <CopyCheck size={12} /> Apply All
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* KPI Area */}
+            {row.ai_kpi_area && (
+              <div className="bg-white/[0.03] rounded-xl p-3 border border-white/[0.06]">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-white/40 text-[10px] font-mono uppercase tracking-widest">KPI Area</p>
+                </div>
+                <p className="text-white/85 text-sm font-medium">{KPI_AREA_LABELS[row.ai_kpi_area as KpiArea]}</p>
+              </div>
+            )}
+
+            {/* Urgency Score */}
+            {row.ai_urgency_score && (
+              <div className="bg-white/[0.03] rounded-xl p-3 border border-white/[0.06]">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-white/40 text-[10px] font-mono uppercase tracking-widest">Urgency</p>
+                  <button
+                    type="button"
+                    onClick={() => applyAiSuggestion('priority')}
+                    className="text-[10px] font-mono text-gold/60 hover:text-gold transition-colors"
+                  >
+                    Apply →
+                  </button>
+                </div>
+                <p className={`text-sm font-bold ${urgencyColor(row.ai_urgency_score)}`}>
+                  {row.ai_urgency_score}/10
+                </p>
+              </div>
+            )}
+
+            {/* Suggested Action */}
+            {row.ai_suggested_action && (
+              <div className="bg-white/[0.03] rounded-xl p-3 border border-white/[0.06] sm:col-span-2">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-white/40 text-[10px] font-mono uppercase tracking-widest">Suggested Action</p>
+                  <button
+                    type="button"
+                    onClick={() => applyAiSuggestion('notes')}
+                    className="text-[10px] font-mono text-gold/60 hover:text-gold transition-colors"
+                  >
+                    Copy to notes →
+                  </button>
+                </div>
+                <p className="text-white/75 text-sm leading-relaxed">{row.ai_suggested_action}</p>
+              </div>
+            )}
+
+            {/* Reasoning */}
+            {row.ai_reasoning && (
+              <div className="bg-white/[0.03] rounded-xl p-3 border border-white/[0.06] sm:col-span-2">
+                <p className="text-white/40 text-[10px] font-mono uppercase tracking-widest mb-1">Reasoning</p>
+                <p className="text-white/50 text-xs leading-relaxed italic">{row.ai_reasoning}</p>
+              </div>
+            )}
+          </div>
+
+          {aiAssisted && (
+            <div className="mt-3 flex items-center gap-1.5 text-gold/60 text-xs font-mono">
+              <CheckCircle2 size={11} />
+              AI suggestions applied — save to commit
+            </div>
+          )}
+        </GlassCard>
+      )}
 
       {/* ── Review Action Form ─────────────────────────────────────────────── */}
       <GlassCard className="p-6">
@@ -596,6 +728,20 @@ export default function ReviewForm({ row }: { row: AdminBoardRow }) {
                 </div>
               </div>
             </div>
+
+              <div className="flex flex-col gap-1.5 mb-4">
+                <label className="mono-label">
+                  Shoutout <span className="text-white/30 normal-case tracking-normal text-xs ml-1">optional</span>
+                </label>
+                <input
+                  type="text"
+                  value={feedShoutout}
+                  onChange={(e) => setFeedShoutout(e.target.value)}
+                  placeholder="e.g. Sarah — appears as 'Shoutout to Sarah for flagging this 🙌'"
+                  maxLength={80}
+                  className="input text-sm"
+                />
+              </div>
 
             <div className="flex flex-col gap-1.5 mb-5">
               <label className="mono-label">Visibility</label>
