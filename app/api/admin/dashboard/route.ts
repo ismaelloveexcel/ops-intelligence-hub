@@ -48,22 +48,28 @@ export async function GET(req: NextRequest) {
       typeCounts[r.submission_type] = (typeCounts[r.submission_type] || 0) + 1
     }
 
-    // Hours saved from feed
-    const hoursSavedFeed = (feedRes.data ?? []).reduce(
+    // Hours saved from feed — include internal + public only
+    const visibleFeedData = (feedRes.data ?? []).filter(
+      (r: { visibility?: string }) => r.visibility === 'internal' || r.visibility === 'public'
+    )
+    const hoursSavedFeed = visibleFeedData.reduce(
       (sum: number, r: { hours_saved: number | null }) => sum + (r.hours_saved ?? 0), 0
     )
 
-    // Pipeline stats
+    // Pipeline stats — include internal + public only for main metrics
     const pipelineData = pipelineRes.data ?? []
-    const deploymentsCount = pipelineData.filter(
+    const visiblePipelineData = pipelineData.filter(
+      (r: { visibility?: string }) => r.visibility === 'internal' || r.visibility === 'public'
+    )
+    const deploymentsCount = visiblePipelineData.filter(
       (r: { status: string }) => r.status === 'deployed'
     ).length
-    const hoursSavedPipeline = pipelineData.reduce(
+    const hoursSavedPipeline = visiblePipelineData.reduce(
       (sum: number, r: { actual_hours_saved: number | null }) => sum + (r.actual_hours_saved ?? 0), 0
     )
 
-    // Public-only pipeline stats
-    const publicPipeline = pipelineData.filter(
+    // Public-only pipeline stats (for public feed metrics)
+    const publicPipeline = visiblePipelineData.filter(
       (r: { visibility?: string }) => r.visibility === 'public'
     )
     const publicDeploymentsCount = publicPipeline.filter(
@@ -74,7 +80,7 @@ export async function GET(req: NextRequest) {
     )
 
     // Public-only feed stats
-    const publicFeedData = (feedRes.data ?? []).filter(
+    const publicFeedData = visibleFeedData.filter(
       (r: { visibility?: string }) => r.visibility === 'public'
     )
     const publicHoursSavedFeed = publicFeedData.reduce(
@@ -84,7 +90,12 @@ export async function GET(req: NextRequest) {
     // Pipeline visibility counts
     const pipelineTotal = pipelineData.length
     const pipelinePublic = publicPipeline.length
-    const pipelinePrivate = pipelineTotal - pipelinePublic
+    const pipelineInternal = pipelineData.filter(
+      (r: { visibility?: string }) => r.visibility === 'internal'
+    ).length
+    const pipelinePrivate = pipelineData.filter(
+      (r: { visibility?: string }) => r.visibility === 'private'
+    ).length
 
     // Hours wasted from board
     const boardData = boardRes.data ?? []
@@ -120,6 +131,7 @@ export async function GET(req: NextRequest) {
       // Visibility breakdowns for admin dashboard
       pipelineTotal,
       pipelinePublic,
+      pipelineInternal,
       pipelinePrivate,
       publicDeploymentsCount,
       publicTotalHoursSaved: Math.round((publicHoursSavedFeed + publicHoursSavedPipeline) * 100) / 100,

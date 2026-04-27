@@ -1,5 +1,68 @@
 // ─── Enum Types ──────────────────────────────────────────────────────────────
 
+export type KpiArea =
+  | 'sales'
+  | 'marketing'
+  | 'introducers'
+  | 'client_service'
+  | 'reporting'
+  | 'sops'
+  | 'finance'
+  | 'ai_knowledge'
+  | 'general_ops'
+
+export const KPI_AREA_LABELS: Record<KpiArea, string> = {
+  sales: 'Sales & Lead Mgmt',
+  marketing: 'Marketing',
+  introducers: 'Introducers & Partners',
+  client_service: 'Client Service',
+  reporting: 'Management Reporting',
+  sops: 'SOPs & Operations',
+  finance: 'Finance Support',
+  ai_knowledge: 'AI & Knowledge',
+  general_ops: 'General Ops',
+}
+
+export const KPI_AREAS: KpiArea[] = [
+  'sales', 'marketing', 'introducers', 'client_service',
+  'reporting', 'sops', 'finance', 'ai_knowledge', 'general_ops',
+]
+
+export type SolutionCategory =
+  | 'automation'
+  | 'process_change'
+  | 'training'
+  | 'tool_purchase'
+  | 'policy_change'
+
+export const SOLUTION_CATEGORY_LABELS: Record<SolutionCategory, string> = {
+  automation: 'Automation',
+  process_change: 'Process Change',
+  training: 'Training',
+  tool_purchase: 'Tool Purchase',
+  policy_change: 'Policy Change',
+}
+
+export type ProjectStatus = 'private' | 'active' | 'completed' | 'archived'
+export type ProjectVisibility = 'private' | 'internal' | 'public'
+export type TaskStatus = 'todo' | 'in_progress' | 'done'
+export type TaskSource = 'self' | 'management' | 'ad_hoc' | 'cross_functional'
+export type SopStatus = 'draft' | 'approved' | 'published'
+export type ReportRunStatus = 'draft' | 'sent'
+
+export const TASK_SOURCE_LABELS: Record<TaskSource, string> = {
+  self: 'Self-initiated',
+  management: 'From management',
+  ad_hoc: 'Ad hoc',
+  cross_functional: 'Cross-functional',
+}
+
+export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
+  todo: 'To Do',
+  in_progress: 'In Progress',
+  done: 'Done',
+}
+
 export type SubmissionType = 'problem' | 'suggestion' | 'idea'
 
 export type Department =
@@ -43,7 +106,7 @@ export type Ease = 'easy' | 'medium' | 'hard'
 
 export type ExecutionStatus = 'planned' | 'in_progress' | 'testing' | 'deployed' | 'cancelled'
 
-export type Visibility = 'private' | 'public'
+export type Visibility = 'private' | 'internal' | 'public'
 
 // ─── Data Interfaces ─────────────────────────────────────────────────────────
 
@@ -67,6 +130,15 @@ export interface Submission {
   impact: Impact
   suggested_fix: string | null
   status: SubmissionStatus
+  // A1 additions
+  kpi_area: KpiArea | null
+  ai_kpi_area: KpiArea | null
+  ai_urgency_score: number | null
+  ai_suggested_action: string | null
+  ai_reasoning: string | null
+  ai_classified_at: string | null
+  ai_cluster_id: string | null
+  submitter_email: string | null
 }
 
 export interface ReviewAction {
@@ -77,8 +149,8 @@ export interface ReviewAction {
   priority: Priority | null
   owner: string | null
   target_date: string | null
-  time_wasted_hrs: number | null
-  ease: Ease | null
+  time_wasted_hrs: number | null   // deprecated — prefer estimated_hours_saved_monthly
+  ease: Ease | null                 // deprecated — prefer implementation_effort
   admin_notes: string | null
   published_to_feed: boolean
   resolved_at: string | null
@@ -87,6 +159,9 @@ export interface ReviewAction {
   review_category: ReviewCategory | null
   impact_level: Impact | null
   estimated_hours_saved_monthly: number | null
+  // A1 additions
+  ai_assisted: boolean
+  ai_prefill: Record<string, unknown> | null
 }
 
 export interface FeedItem {
@@ -100,6 +175,9 @@ export interface FeedItem {
   before_summary: string | null
   after_summary: string | null
   visibility: Visibility
+  // A1 additions
+  kpi_area: KpiArea | null
+  shoutout: string | null
 }
 
 export interface ExecutionPipelineItem {
@@ -117,6 +195,11 @@ export interface ExecutionPipelineItem {
   actual_hours_saved: number | null
   notes: string | null
   visibility: Visibility
+  // A1 additions
+  kpi_area: KpiArea | null
+  solution_category: SolutionCategory | null
+  submitter_notified_at: string | null
+  project_id: string | null
 }
 
 export interface AdminBoardRow extends Submission {
@@ -138,6 +221,94 @@ export interface AdminBoardRow extends Submission {
   estimated_hours_saved_monthly: number | null
   hours_wasted_month: number | null
   priority_score: number | null
+  ai_assisted: boolean | null
+  ai_prefill: Record<string, unknown> | null
+}
+
+// ─── New Interfaces (A1) ─────────────────────────────────────────────────────
+
+export interface Project {
+  id: string
+  title: string
+  description: string | null
+  status: ProjectStatus
+  visibility: ProjectVisibility
+  kpi_area: KpiArea | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface OperatorTask {
+  id: string
+  title: string
+  description: string | null
+  status: TaskStatus
+  kpi_area: KpiArea | null
+  project_id: string | null
+  source: TaskSource
+  promote_to_pipeline: boolean
+  created_at: string
+  completed_at: string | null
+}
+
+export interface ScratchpadNote {
+  id: string
+  title: string
+  content_md: string | null
+  kpi_area: KpiArea | null
+  is_private: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface LabSession {
+  id: string
+  input_text: string
+  kpi_area: KpiArea | null
+  linked_submission_id: string | null
+  linked_project_id: string | null
+  ai_output: string | null
+  automation_score: number | null
+  saved_to_notes: boolean
+  promoted_to_pipeline: boolean
+  created_at: string
+}
+
+export interface SopDraft {
+  id: string
+  source_submission_id: string | null
+  source_pipeline_id: string | null
+  kpi_area: KpiArea | null
+  title: string
+  content_md: string | null
+  status: SopStatus
+  ai_drafted: boolean
+  created_at: string
+}
+
+export interface ReportRun {
+  id: string
+  generated_at: string
+  range_label: string | null
+  kpi_summary: Record<string, unknown> | null
+  narrative_md: string | null
+  pdf_url: string | null
+  sent_to: string[]
+  status: ReportRunStatus
+}
+
+export interface PendingNotification {
+  id: string
+  submission_id: string | null
+  submitter_email: string
+  submitter_name: string | null
+  subject: string
+  body_html: string
+  trigger_status: string
+  sent_at: string | null
+  dismissed_at: string | null
+  created_at: string
 }
 
 // ─── Formulas ────────────────────────────────────────────────────────────────
@@ -256,7 +427,14 @@ export const EXECUTION_STATUS_LABELS: Record<ExecutionStatus, string> = {
 
 export const VISIBILITY_LABELS: Record<Visibility, string> = {
   private: 'Private',
+  internal: 'Internal',
   public: 'Public',
+}
+
+export const VISIBILITY_DESCRIPTIONS: Record<Visibility, string> = {
+  private: 'Private — only visible to you',
+  internal: 'Internal — appears in reports and dashboard',
+  public: 'Public — appears on the team feed',
 }
 
 // ─── Status Colour Map ───────────────────────────────────────────────────────
@@ -274,4 +452,13 @@ export const IMPACT_COLORS: Record<Impact, string> = {
   low: 'impact-low',
   medium: 'impact-medium',
   high: 'impact-high',
+}
+
+// ─── KPI urgency colour ──────────────────────────────────────────────────────
+
+export function urgencyColor(score: number | null): string {
+  if (score == null) return 'text-white/40'
+  if (score >= 7) return 'text-danger'
+  if (score >= 4) return 'text-gold'
+  return 'text-success'
 }

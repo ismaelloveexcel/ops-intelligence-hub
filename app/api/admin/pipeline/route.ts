@@ -5,7 +5,7 @@ import { logAdminAction } from '@/lib/audit-log'
 import { ExecutionStatus, Visibility } from '@/lib/types'
 
 const VALID_STATUSES: ExecutionStatus[] = ['planned', 'in_progress', 'testing', 'deployed', 'cancelled']
-const VALID_VISIBILITIES: Visibility[] = ['private', 'public']
+const VALID_VISIBILITIES: Visibility[] = ['private', 'internal', 'public']
 
 export async function GET(req: NextRequest) {
   const authErr = await validateAdminRequest(req)

@@ -61,6 +61,7 @@ export async function PATCH(
       review_category,
       impact_level,
       estimated_hours_saved_monthly,
+      ai_assisted,
     } = body
 
     // Validate status if provided
@@ -91,6 +92,7 @@ export async function PATCH(
           review_category: review_category ?? null,
           impact_level: impact_level ?? null,
           estimated_hours_saved_monthly: estimated_hours_saved_monthly ?? null,
+          ai_assisted: ai_assisted ?? false,
         },
         { onConflict: 'submission_id' }
       )

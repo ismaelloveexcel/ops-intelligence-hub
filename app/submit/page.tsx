@@ -38,12 +38,12 @@ function SelectField({ label, id, value, onChange, required, children }: SelectF
   )
 }
 
-// ─── Type selector icons ──────────────────────────────────────────────────────
+// ─── Type selector ────────────────────────────────────────────────────────────
 
-const TYPE_CONFIG: Record<SubmissionType, { icon: React.ElementType; desc: string }> = {
-  problem: { icon: AlertTriangle, desc: 'Report an inefficient process or issue' },
-  suggestion: { icon: Lightbulb, desc: 'Suggest an improvement to how we work' },
-  idea: { icon: Zap, desc: 'Quick idea — just a sentence or two' },
+const TYPE_CONFIG: Record<SubmissionType, { icon: React.ElementType; label: string; desc: string }> = {
+  problem: { icon: AlertTriangle, label: "Something that's broken or slow", desc: 'Report an inefficient process or issue' },
+  suggestion: { icon: Lightbulb, label: 'An idea I think could help', desc: 'Suggest an improvement to how we work' },
+  idea: { icon: Zap, label: 'Just a quick thought', desc: 'Quick idea — just a sentence or two' },
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -70,6 +70,7 @@ export default function SubmitPage() {
   const [frequency, setFrequency] = useState<Frequency | ''>('')
   const [impact, setImpact] = useState<Impact | ''>('')
   const [suggestedFix, setSuggestedFix] = useState('')
+  const [submitterEmail, setSubmitterEmail] = useState('')
 
   const isQuickIdea = submissionType === 'idea'
 
@@ -99,6 +100,7 @@ export default function SubmitPage() {
           frequency: isQuickIdea ? 'occasional' : frequency,
           impact: isQuickIdea ? 'medium' : impact,
           suggested_fix: suggestedFix.trim() || null,
+          submitter_email: submitterEmail.trim() || null,
         }),
       })
 
@@ -107,7 +109,8 @@ export default function SubmitPage() {
         throw new Error(data.error ?? 'Something went wrong. Please try again.')
       }
 
-      router.push('/submit/done')
+      const data = await res.json()
+      router.push(`/submit/done?ref=${data.id}`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Unexpected error. Please try again.')
       setLoading(false)
@@ -127,34 +130,20 @@ export default function SubmitPage() {
 
       {/* Header */}
       <div className="mb-8">
-        <p className="text-white/30 text-xs font-mono uppercase tracking-widest mb-3">Operations Intelligence Hub</p>
-        <h1 className="text-2xl font-bold tracking-tight mb-3">Making Work Easier</h1>
+        <div className="flex items-center gap-2 mb-3">
+          <ImpactDot />
+          <p className="text-white/30 text-xs font-mono uppercase tracking-widest">Operations Intelligence Hub</p>
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight mb-3">What&apos;s slowing you down?</h1>
         <p className="text-white/55 text-sm leading-relaxed">
-          If something takes longer than it should, feels repetitive, or could be made simpler — feel free to share it here.
+          Anything repetitive, annoying, or wasteful — no idea is too small
         </p>
-        <p className="text-white/55 text-sm leading-relaxed mt-2">
-          The aim is to reduce unnecessary steps and make day-to-day work smoother.
-        </p>
-        <p className="text-white/55 text-sm leading-relaxed mt-2">
-          No suggestion is too small.
-        </p>
-      </div>
-
-      {/* Example guidance */}
-      <div className="mb-6 rounded-xl border border-white/[0.08] bg-white/[0.03] px-5 py-4">
-        <p className="text-white/40 text-xs font-mono uppercase tracking-widest mb-2">Examples</p>
-        <ul className="text-white/50 text-sm leading-relaxed space-y-1">
-          <li>• Repetitive manual tasks</li>
-          <li>• Delays in getting information</li>
-          <li>• Too many steps for simple tasks</li>
-          <li>• Things that could be simplified or streamlined</li>
-        </ul>
       </div>
 
       {/* Submission type selector */}
       <div className="grid grid-cols-3 gap-2 mb-6">
         {(Object.keys(TYPE_CONFIG) as SubmissionType[]).map((type) => {
-          const { icon: Icon, desc } = TYPE_CONFIG[type]
+          const { icon: Icon, label } = TYPE_CONFIG[type]
           const active = submissionType === type
           return (
             <button
@@ -162,10 +151,10 @@ export default function SubmitPage() {
               type="button"
               onClick={() => setSubmissionType(type)}
               className={`action-btn ${active ? 'active' : ''}`}
-              title={desc}
+              title={label}
             >
               <Icon size={20} />
-              <span>{SUBMISSION_TYPE_LABELS[type]}</span>
+              <span className="text-[11px] leading-tight text-center">{label}</span>
             </button>
           )
         })}
@@ -191,7 +180,7 @@ export default function SubmitPage() {
                     Submitting <span className="text-gold font-semibold">anonymously</span>
                   </span>
                 ) : (
-                  'Submit anonymously'
+                  'Keep this anonymous'
                 )}
               </span>
             </button>
@@ -237,14 +226,18 @@ export default function SubmitPage() {
             <label htmlFor="description" className="mono-label">
               {isQuickIdea ? "What's your idea?" : "What is slowing things down?"}
             </label>
+            {/* A10 — PII warning */}
+            <p className="text-[11px] text-amber-400/80 leading-snug">
+              Please don&apos;t include client names, account numbers, or transaction IDs
+            </p>
             <textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={
                 isQuickIdea
-                  ? 'Describe your idea in a few sentences.'
-                  : 'Example: We manually copy client details from emails into Excel every day, which takes time and can lead to errors.'
+                  ? 'Describe it like you&apos;re telling a colleague over lunch — what happens, how often, why it&apos;s a pain'
+                  : 'Describe it like you&apos;re telling a colleague over lunch — what happens, how often, why it&apos;s a pain'
               }
               required
               maxLength={2000}
@@ -254,6 +247,25 @@ export default function SubmitPage() {
             <span className="text-white/25 text-xs text-right font-mono">
               {description.length}/2000
             </span>
+          </div>
+
+          {/* A7 — Email field (below description, not prominent) */}
+          <div className="flex flex-col gap-2">
+            <label htmlFor="submitter_email" className="mono-label">
+              Email{' '}
+              <span className="text-white/30 normal-case tracking-normal text-xs ml-1">
+                optional — I&apos;ll let you know when this is actioned
+              </span>
+            </label>
+            <input
+              id="submitter_email"
+              type="email"
+              value={submitterEmail}
+              onChange={(e) => setSubmitterEmail(e.target.value)}
+              placeholder="your@email.com"
+              className="input"
+              autoComplete="email"
+            />
           </div>
 
           {/* Extended fields (not shown for quick ideas) */}
@@ -270,7 +282,7 @@ export default function SubmitPage() {
                     type="text"
                     value={processName}
                     onChange={(e) => setProcessName(e.target.value)}
-                    placeholder="e.g. Client onboarding"
+                    placeholder="e.g. sending weekly reports, onboarding a new client, chasing approvals..."
                     className="input"
                   />
                 </div>
@@ -430,10 +442,10 @@ export default function SubmitPage() {
             {loading ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
-                Submitting…
+                Sending…
               </>
             ) : (
-              isQuickIdea ? 'Submit Idea' : submissionType === 'suggestion' ? 'Submit Suggestion' : 'Submit Issue'
+              'Send it'
             )}
           </button>
 
@@ -447,3 +459,4 @@ export default function SubmitPage() {
     </main>
   )
 }
+

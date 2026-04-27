@@ -7,25 +7,41 @@ import {
   SubmissionStatus,
   DEPARTMENT_LABELS,
   Department,
+  KPI_AREA_LABELS,
+  KpiArea,
+  KPI_AREAS,
 } from '@/lib/types'
 import { ShieldAlert, TrendingUp, Clock, Zap, CheckCircle, BarChart3, ArrowRightLeft, Lightbulb, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
+// ─── Greeting helpers ─────────────────────────────────────────────────────────
+
+function getGreeting(): string {
+  const hour = new Date().getUTCHours()
+  // Mauritius is UTC+4, so adjust
+  const local = (hour + 4) % 24
+  if (local >= 5 && local < 12) return 'Good morning'
+  if (local >= 12 && local < 17) return 'Good afternoon'
+  return 'Good evening'
+}
+
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
 async function getDashboardData() {
   try {
-    const [boardRes, feedRes, pipelineRes] = await Promise.all([
+    const [boardRes, feedRes, pipelineRes, submissionsRes] = await Promise.all([
       supabaseAdmin.from('admin_board').select('*'),
-      supabaseAdmin.from('feed_items').select('hours_saved, visibility'),
-      supabaseAdmin.from('execution_pipeline').select('status, actual_hours_saved, visibility'),
+      supabaseAdmin.from('feed_items').select('hours_saved, visibility, kpi_area'),
+      supabaseAdmin.from('execution_pipeline').select('status, actual_hours_saved, visibility, solution_category, kpi_area'),
+      supabaseAdmin.from('submissions').select('id, status, affects_client, involves_money, ai_urgency_score, ai_kpi_area, created_at'),
     ])
 
     const board = (boardRes.data ?? []) as AdminBoardRow[]
     const feedItems = feedRes.data ?? []
     const pipeline = pipelineRes.data ?? []
+    const submissions = submissionsRes.data ?? []
 
     const total = board.length
     const statusCounts: Record<string, number> = {}
@@ -36,9 +52,7 @@ async function getDashboardData() {
       deptCounts[r.department] = (deptCounts[r.department] || 0) + 1
     }
 
-    const totalHoursWasted = board.reduce(
-      (sum, r) => sum + (r.hours_wasted_month ?? 0), 0
-    )
+    const totalHoursWasted = board.reduce((sum, r) => sum + (r.hours_wasted_month ?? 0), 0)
 
     const hoursSavedFeed = feedItems.reduce(
       (sum: number, r: { hours_saved: number | null }) => sum + (r.hours_saved ?? 0), 0
@@ -48,33 +62,65 @@ async function getDashboardData() {
     )
     const totalHoursSaved = hoursSavedFeed + hoursSavedPipeline
 
-    const deploymentsCount = pipeline.filter(
-      (r: { status: string }) => r.status === 'deployed'
+    // Hours saved this month
+    const startOfMonth = new Date()
+    startOfMonth.setDate(1)
+    startOfMonth.setHours(0, 0, 0, 0)
+    const hoursSavedThisMonth = feedItems.reduce(
+      (sum: number, r: { hours_saved: number | null }) => sum + (r.hours_saved ?? 0), 0
+    )
+
+    const deploymentsCount = pipeline.filter((r: { status: string }) => r.status === 'deployed').length
+    const automationDeployedCount = pipeline.filter(
+      (r: { status: string; solution_category: string | null }) =>
+        r.status === 'deployed' && r.solution_category === 'automation'
+    ).length
+    const automationRate = deploymentsCount > 0
+      ? Math.round((automationDeployedCount / deploymentsCount) * 100)
+      : 0
+
+    // Open high-urgency items (excludes private projects - operator_tasks are admin-only)
+    const openHighUrgency = (submissions as Array<{ status: string; affects_client: boolean; involves_money: boolean; ai_urgency_score: number | null }>).filter(
+      (s) => ['new', 'reviewing'].includes(s.status) &&
+        ((s.affects_client && s.involves_money) || (s.ai_urgency_score ?? 0) >= 8)
+    ).length
+
+    // Items needing attention (new or stuck in reviewing)
+    const needsAttention = (submissions as Array<{ status: string }>).filter(
+      (s) => s.status === 'new'
     ).length
 
     // Pipeline visibility breakdown
-    const pipelinePublic = pipeline.filter(
-      (r: { visibility?: string }) => r.visibility === 'public'
-    ).length
+    const pipelinePublic = pipeline.filter((r: { visibility?: string }) => r.visibility === 'public').length
     const pipelinePrivate = pipeline.length - pipelinePublic
 
-    const activeItems = board.filter(
-      (r) => !['implemented', 'rejected'].includes(r.status)
-    )
-
+    const activeItems = board.filter((r) => !['implemented', 'rejected'].includes(r.status))
     const topBottlenecks = [...activeItems]
       .sort((a, b) => (b.hours_wasted_month ?? 0) - (a.hours_wasted_month ?? 0))
       .slice(0, 5)
-
     const quickWins = activeItems
       .filter((r) => (r.automation_potential ?? 0) >= 4 && r.implementation_effort === 'quick')
       .slice(0, 5)
-
-    // Conversion metrics
     const actionedCount = board.filter(
       (r) => ['accepted', 'in_progress', 'implemented'].includes(r.status)
     ).length
     const conversionRate = total > 0 ? Math.round((actionedCount / total) * 100) : 0
+
+    // KPI grid: open / resolved / hours_saved per area (exclude private projects)
+    const kpiData: Record<KpiArea, { open: number; resolved: number; hoursSaved: number }> = {} as Record<KpiArea, { open: number; resolved: number; hoursSaved: number }>
+    for (const kpi of KPI_AREAS) kpiData[kpi] = { open: 0, resolved: 0, hoursSaved: 0 }
+
+    for (const s of submissions as Array<{ status: string; ai_kpi_area: string | null }>) {
+      const kpi = (s.ai_kpi_area as KpiArea) || 'general_ops'
+      if (!kpiData[kpi]) continue
+      if (['new', 'reviewing', 'accepted'].includes(s.status)) kpiData[kpi].open++
+      else if (['in_progress', 'implemented'].includes(s.status)) kpiData[kpi].resolved++
+    }
+    for (const f of feedItems as Array<{ kpi_area: string | null; hours_saved: number | null }>) {
+      const kpi = (f.kpi_area as KpiArea) || 'general_ops'
+      if (!kpiData[kpi]) continue
+      kpiData[kpi].hoursSaved += f.hours_saved ?? 0
+    }
 
     return {
       total,
@@ -82,6 +128,10 @@ async function getDashboardData() {
       deptCounts,
       totalHoursWasted,
       totalHoursSaved,
+      hoursSavedThisMonth,
+      automationRate,
+      openHighUrgency,
+      needsAttention,
       deploymentsCount,
       topBottlenecks,
       quickWins,
@@ -90,6 +140,7 @@ async function getDashboardData() {
       actionedCount,
       pipelinePublic,
       pipelinePrivate,
+      kpiData,
     }
   } catch {
     return {
@@ -98,6 +149,10 @@ async function getDashboardData() {
       deptCounts: {} as Record<string, number>,
       totalHoursWasted: 0,
       totalHoursSaved: 0,
+      hoursSavedThisMonth: 0,
+      automationRate: 0,
+      openHighUrgency: 0,
+      needsAttention: 0,
       deploymentsCount: 0,
       topBottlenecks: [] as AdminBoardRow[],
       quickWins: [] as AdminBoardRow[],
@@ -106,6 +161,7 @@ async function getDashboardData() {
       actionedCount: 0,
       pipelinePublic: 0,
       pipelinePrivate: 0,
+      kpiData: Object.fromEntries(KPI_AREAS.map((k) => [k, { open: 0, resolved: 0, hoursSaved: 0 }])) as Record<KpiArea, { open: number; resolved: number; hoursSaved: number }>,
     }
   }
 }
@@ -119,18 +175,22 @@ export default async function DashboardPage() {
     'new', 'reviewing', 'accepted', 'in_progress', 'implemented', 'rejected',
   ]
 
+  const greeting = getGreeting()
+
   return (
     <main className="min-h-screen px-4 pt-10 pb-10 max-w-5xl mx-auto">
-      {/* Header */}
+      {/* ── Greeting ─────────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4 mb-8">
         <div>
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-1">
             <ImpactDot />
             <p className="mono-label">Dashboard</p>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Ops Intelligence Dashboard</h1>
-          <p className="text-white/40 text-sm mt-1">
-            Real-time view of operational pain points, automation progress, and impact.
+          <h1 className="text-2xl font-bold tracking-tight">{greeting}, Ismael</h1>
+          <p className="text-white/50 text-sm mt-1">
+            {data.needsAttention > 0
+              ? `${data.needsAttention} ${data.needsAttention === 1 ? 'thing needs' : 'things need'} your attention today`
+              : "You're all caught up 👌"}
           </p>
         </div>
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gold/25 bg-gold/[0.08] text-gold text-xs font-mono">
@@ -139,7 +199,95 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Key Metrics */}
+      {/* ── ROI Strip ────────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        {[
+          {
+            value: `${data.totalHoursSaved.toFixed(0)}h`,
+            label: 'Manual hours saved (all time)',
+            color: 'text-success',
+          },
+          {
+            value: `${data.hoursSavedThisMonth.toFixed(0)}h`,
+            label: 'Hours saved this month',
+            color: 'text-gold',
+          },
+          {
+            value: `${data.automationRate}%`,
+            label: 'Automation rate',
+            color: 'text-gold',
+          },
+          {
+            value: String(data.openHighUrgency),
+            label: 'Open high-urgency items',
+            color: data.openHighUrgency > 0 ? 'text-danger' : 'text-success',
+          },
+        ].map(({ value, label, color }) => (
+          <GlassCard key={label} className="stat-card border-gold/10">
+            <div className={`stat-number ${color}`}>{value}</div>
+            <div className="stat-label">{label}</div>
+          </GlassCard>
+        ))}
+      </div>
+
+      {/* ── KPI Grid ─────────────────────────────────────────────────────────── */}
+      <div className="mb-8">
+        <p className="mono-label mb-4">KPI Overview</p>
+        {data.total === 0 ? (
+          <GlassCard className="p-6 text-center">
+            <p className="text-white/40 text-sm">
+              Nothing here yet — share the link with the team and see what comes in
+            </p>
+          </GlassCard>
+        ) : (
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+            {KPI_AREAS.map((kpi) => {
+              const tile = data.kpiData[kpi]
+              const hasActivity = tile.open > 0 || tile.resolved > 0 || tile.hoursSaved > 0
+              // Tile colour: green = resolved > open, amber = equal, red = open > resolved, grey = no activity
+              const borderColor = !hasActivity
+                ? 'border-white/[0.06]'
+                : tile.resolved > tile.open
+                ? 'border-success/30'
+                : tile.open > tile.resolved
+                ? 'border-danger/30'
+                : 'border-gold/25'
+              const dotColor = !hasActivity
+                ? 'bg-white/20'
+                : tile.resolved > tile.open
+                ? 'bg-success'
+                : tile.open > tile.resolved
+                ? 'bg-danger'
+                : 'bg-gold'
+
+              return (
+                <GlassCard
+                  key={kpi}
+                  className={`p-3 border ${borderColor} ${!hasActivity ? 'opacity-50' : ''}`}
+                >
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dotColor}`} />
+                    <p className="text-white/60 text-[10px] font-mono leading-tight line-clamp-2">
+                      {KPI_AREA_LABELS[kpi]}
+                    </p>
+                  </div>
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-white/40">{tile.open} open</span>
+                    <span className="text-white/60">{tile.resolved} done</span>
+                  </div>
+                  {tile.hoursSaved > 0 && (
+                    <p className="text-success text-[10px] font-mono mt-1">
+                      {tile.hoursSaved.toFixed(0)}h saved
+                    </p>
+                  )}
+                </GlassCard>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── Key Metrics ──────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
         {[
           { icon: BarChart3, value: data.total, label: 'Total Submissions' },
@@ -159,7 +307,7 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      {/* Pipeline Visibility */}
+      {/* ── Pipeline Visibility ───────────────────────────────────────────────── */}
       <div className="mb-8">
         <p className="mono-label mb-4">Pipeline Visibility</p>
         <div className="grid grid-cols-2 gap-3">
@@ -180,7 +328,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Status Breakdown */}
+      {/* ── Status Breakdown ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-8">
         {ALL_STATUSES.map((s) => (
           <GlassCard key={s} className="py-3 px-2 text-center">
@@ -192,7 +340,7 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      {/* Department Breakdown */}
+      {/* ── Department Breakdown ──────────────────────────────────────────────── */}
       <div className="mb-8">
         <p className="mono-label mb-4">By Department</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -209,9 +357,8 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Two Column: Top Bottlenecks + Quick Wins */}
+      {/* ── Top Bottlenecks + Quick Wins ─────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-        {/* Top Bottlenecks */}
         <div>
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp size={14} className="text-danger" />
@@ -219,7 +366,7 @@ export default async function DashboardPage() {
           </div>
           {data.topBottlenecks.length === 0 ? (
             <GlassCard className="p-4 text-white/30 text-sm text-center">
-              No bottleneck data yet.
+              Nothing urgent right now. Good place to be.
             </GlassCard>
           ) : (
             <div className="flex flex-col gap-2">
@@ -242,7 +389,6 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        {/* Quick Wins */}
         <div>
           <div className="flex items-center gap-2 mb-4">
             <Zap size={14} className="text-success" />
@@ -250,7 +396,7 @@ export default async function DashboardPage() {
           </div>
           {data.quickWins.length === 0 ? (
             <GlassCard className="p-4 text-white/30 text-sm text-center">
-              No quick wins identified yet. Review submissions and set automation potential + effort.
+              No active work yet — pick something from the triage board to get started
             </GlassCard>
           ) : (
             <div className="flex flex-col gap-2">
@@ -270,27 +416,23 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Links */}
+      {/* ── Links ────────────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap gap-3">
-        <Link href="/admin" className="btn-secondary text-sm">
-          Triage Board →
-        </Link>
-        <Link href="/admin/pipeline" className="btn-secondary text-sm">
-          Execution Pipeline →
-        </Link>
-        <Link href="/admin/attention" className="btn-secondary text-sm">
-          Needs Attention →
-        </Link>
-        <Link href="/admin/reports" className="btn-secondary text-sm">
-          Reports →
-        </Link>
-        <Link href="/admin/work" className="btn-secondary text-sm">
-          Active Work →
-        </Link>
-        <Link href="/admin/audit" className="btn-secondary text-sm">
-          Audit Log →
-        </Link>
+        <Link href="/admin" className="btn-secondary text-sm">Triage Board →</Link>
+        <Link href="/admin/pipeline" className="btn-secondary text-sm">Execution Pipeline →</Link>
+        <Link href="/admin/attention" className="btn-secondary text-sm">Needs Attention →</Link>
+        <Link href="/admin/reports" className="btn-secondary text-sm">Reports →</Link>
+        <Link href="/admin/work" className="btn-secondary text-sm">Active Work →</Link>
+        <Link href="/admin/audit" className="btn-secondary text-sm">Audit Log →</Link>
+        <Link href="/admin/projects" className="btn-secondary text-sm">Projects →</Link>
+        <Link href="/admin/tasks" className="btn-secondary text-sm">My Tasks →</Link>
+        <Link href="/admin/notes" className="btn-secondary text-sm">Notes →</Link>
+        <Link href="/admin/lab" className="btn-secondary text-sm">Automation Lab →</Link>
+        <Link href="/admin/notifications" className="btn-secondary text-sm">Notifications →</Link>
+        <Link href="/admin/settings" className="btn-secondary text-sm">Settings →</Link>
       </div>
     </main>
   )
 }
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
