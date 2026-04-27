@@ -40,6 +40,7 @@ One genuine human observation per report is encouraged.
 Tone: professional, warm, direct. No emojis. No exclamation marks. No filler phrases.
 Write in first-person plural where appropriate.
 Never reference AI, automation tools, or how the report was made.
+Only reference pipeline items marked as internal or public. Never reference private items.
 Avoid: "It is worth noting", "Going forward", "In conclusion", "As evidenced by the data", "Stakeholders", "Leverage".
 
 Structure your response with these exact section headers:

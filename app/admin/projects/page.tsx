@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import GlassCard from '@/components/GlassCard'
 import ImpactDot from '@/components/ImpactDot'
 import Link from 'next/link'
-import { ChevronLeft, Plus, Loader2, Eye, EyeOff, Archive, X, ShieldAlert, Pencil, Check } from 'lucide-react'
+import { ChevronLeft, Plus, Loader2, Lock, Eye, Globe, Archive, X, ShieldAlert, Pencil, Check } from 'lucide-react'
 import { KPI_AREA_LABELS, KpiArea } from '@/lib/types'
 
 interface Project {
@@ -12,7 +12,7 @@ interface Project {
   title: string
   description: string | null
   status: 'private' | 'active' | 'completed' | 'archived'
-  visibility: 'private' | 'public'
+  visibility: 'private' | 'internal' | 'public'
   kpi_area: KpiArea | null
   notes: string | null
   created_at: string
@@ -23,6 +23,25 @@ const STATUS_COLORS: Record<string, string> = {
   active: 'text-gold border-gold/30',
   completed: 'text-success border-success/30',
   archived: 'text-white/25 border-white/[0.05]',
+}
+
+const VISIBILITY_CYCLE: Array<'private' | 'internal' | 'public'> = ['private', 'internal', 'public']
+
+function nextVisibility(current: 'private' | 'internal' | 'public'): 'private' | 'internal' | 'public' {
+  const idx = VISIBILITY_CYCLE.indexOf(current)
+  return VISIBILITY_CYCLE[(idx + 1) % VISIBILITY_CYCLE.length]
+}
+
+function visibilityIcon(v: 'private' | 'internal' | 'public', size = 13) {
+  if (v === 'private') return <Lock size={size} />
+  if (v === 'internal') return <Eye size={size} />
+  return <Globe size={size} />
+}
+
+function visibilityTitle(v: 'private' | 'internal' | 'public') {
+  if (v === 'private') return 'Private — cycle to Internal'
+  if (v === 'internal') return 'Internal — cycle to Public'
+  return 'Public — cycle to Private'
 }
 
 export default function ProjectsPage() {
@@ -171,11 +190,13 @@ export default function ProjectsPage() {
                           <Pencil size={13} />
                         </button>
                         <button
-                          onClick={() => updateProject(project.id, { visibility: project.visibility === 'private' ? 'public' : 'private' })}
-                          className="p-1.5 text-white/25 hover:text-gold rounded"
-                          title={project.visibility === 'private' ? 'Make public' : 'Make private'}
+                          onClick={() => updateProject(project.id, { visibility: nextVisibility(project.visibility) })}
+                          className={`p-1.5 rounded hover:bg-white/5 transition-colors ${
+                            project.visibility === 'public' ? 'text-gold' : project.visibility === 'internal' ? 'text-sky-400' : 'text-white/25'
+                          }`}
+                          title={visibilityTitle(project.visibility)}
                         >
-                          {project.visibility === 'private' ? <EyeOff size={13} /> : <Eye size={13} />}
+                          {visibilityIcon(project.visibility)}
                         </button>
                         <button onClick={() => deleteProject(project.id)} className="p-1.5 text-white/25 hover:text-danger rounded">
                           <Archive size={13} />

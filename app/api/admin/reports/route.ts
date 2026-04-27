@@ -89,11 +89,13 @@ export async function GET(req: NextRequest) {
       supabaseAdmin
         .from('feed_items')
         .select('id, title, what_changed, department, published_at, hours_saved, before_summary, after_summary, shoutout, kpi_area')
+        .in('visibility', ['internal', 'public'])
         .gte('published_at', sinceDate)
         .lte('published_at', untilDate),
       supabaseAdmin
         .from('execution_pipeline')
         .select('id, title, status, tool_used, actual_hours_saved, created_at, kpi_area, solution_category')
+        .in('visibility', ['internal', 'public'])
         .gte('created_at', sinceDate)
         .lte('created_at', untilDate),
     ])

@@ -4,7 +4,7 @@ import { useState, useEffect, FormEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import GlassCard from '@/components/GlassCard'
 import ImpactDot from '@/components/ImpactDot'
-import { ExecutionStatus, EXECUTION_STATUS_LABELS, Visibility, VISIBILITY_LABELS } from '@/lib/types'
+import { ExecutionStatus, EXECUTION_STATUS_LABELS, Visibility, VISIBILITY_DESCRIPTIONS } from '@/lib/types'
 import { ChevronLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -146,20 +146,38 @@ export default function NewPipelineItemPage() {
 
           <div className="flex flex-col gap-2">
             <label className="mono-label">Visibility</label>
-            <select
-              value={visibility}
-              onChange={(e) => setVisibility(e.target.value as Visibility)}
-              className="input"
-            >
-              {(Object.keys(VISIBILITY_LABELS) as Visibility[]).map((v) => (
-                <option key={v} value={v}>{VISIBILITY_LABELS[v]}</option>
+            <div className="flex flex-col gap-2">
+              {(['private', 'internal', 'public'] as Visibility[]).map((v) => (
+                <label
+                  key={v}
+                  className={`flex items-start gap-3 px-3 py-2.5 rounded-xl border cursor-pointer transition-colors ${
+                    visibility === v
+                      ? v === 'private'
+                        ? 'border-white/25 bg-white/[0.06]'
+                        : v === 'internal'
+                          ? 'border-sky-500/40 bg-sky-500/10'
+                          : 'border-gold/40 bg-gold/10'
+                      : 'border-white/[0.08] hover:border-white/20'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="visibility"
+                    value={v}
+                    checked={visibility === v}
+                    onChange={() => setVisibility(v)}
+                    className="mt-0.5 accent-gold"
+                  />
+                  <span className={`text-xs font-mono ${
+                    visibility === v
+                      ? v === 'internal' ? 'text-sky-400' : v === 'public' ? 'text-gold' : 'text-white/70'
+                      : 'text-white/40'
+                  }`}>
+                    {VISIBILITY_DESCRIPTIONS[v]}
+                  </span>
+                </label>
               ))}
-            </select>
-            <p className="text-white/30 text-xs">
-              {visibility === 'private'
-                ? 'Private — visible only to admin/operator'
-                : 'Public — visible in management/public views'}
-            </p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

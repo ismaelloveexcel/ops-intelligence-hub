@@ -59,11 +59,13 @@ export async function GET(req: NextRequest) {
       supabaseAdmin
         .from('feed_items')
         .select('*')
+        .in('visibility', ['internal', 'public'])
         .gte('published_at', sinceDate)
         .order('published_at', { ascending: false }),
       supabaseAdmin
         .from('execution_pipeline')
         .select('*')
+        .in('visibility', ['internal', 'public'])
         .gte('created_at', sinceDate),
       supabaseAdmin
         .from('submissions')

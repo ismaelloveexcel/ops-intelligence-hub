@@ -44,7 +44,7 @@ export const SOLUTION_CATEGORY_LABELS: Record<SolutionCategory, string> = {
 }
 
 export type ProjectStatus = 'private' | 'active' | 'completed' | 'archived'
-export type ProjectVisibility = 'private' | 'public'
+export type ProjectVisibility = 'private' | 'internal' | 'public'
 export type TaskStatus = 'todo' | 'in_progress' | 'done'
 export type TaskSource = 'self' | 'management' | 'ad_hoc' | 'cross_functional'
 export type SopStatus = 'draft' | 'approved' | 'published'
@@ -106,7 +106,7 @@ export type Ease = 'easy' | 'medium' | 'hard'
 
 export type ExecutionStatus = 'planned' | 'in_progress' | 'testing' | 'deployed' | 'cancelled'
 
-export type Visibility = 'private' | 'public'
+export type Visibility = 'private' | 'internal' | 'public'
 
 // ─── Data Interfaces ─────────────────────────────────────────────────────────
 
@@ -427,7 +427,14 @@ export const EXECUTION_STATUS_LABELS: Record<ExecutionStatus, string> = {
 
 export const VISIBILITY_LABELS: Record<Visibility, string> = {
   private: 'Private',
+  internal: 'Internal',
   public: 'Public',
+}
+
+export const VISIBILITY_DESCRIPTIONS: Record<Visibility, string> = {
+  private: 'Private — only visible to you',
+  internal: 'Internal — appears in reports and dashboard',
+  public: 'Public — appears on the team feed',
 }
 
 // ─── Status Colour Map ───────────────────────────────────────────────────────
