@@ -6,6 +6,10 @@ import { KpiArea, KPI_AREAS } from '@/lib/types'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+// Visibility values that appear in reports and PDF.
+// 'private' items must never appear in any management-facing output.
+const REPORTABLE_VISIBILITIES = ['internal', 'public'] as const
+
 function getWeekNumber(date: Date): number {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
   const dayNum = d.getUTCDay() || 7
@@ -59,13 +63,13 @@ export async function GET(req: NextRequest) {
       supabaseAdmin
         .from('feed_items')
         .select('*')
-        .in('visibility', ['internal', 'public'])
+        .in('visibility', REPORTABLE_VISIBILITIES)
         .gte('published_at', sinceDate)
         .order('published_at', { ascending: false }),
       supabaseAdmin
         .from('execution_pipeline')
         .select('*')
-        .in('visibility', ['internal', 'public'])
+        .in('visibility', REPORTABLE_VISIBILITIES)
         .gte('created_at', sinceDate),
       supabaseAdmin
         .from('submissions')

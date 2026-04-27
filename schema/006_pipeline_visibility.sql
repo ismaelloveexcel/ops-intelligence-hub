@@ -20,8 +20,10 @@ ALTER TYPE visibility ADD VALUE IF NOT EXISTS 'internal';
 ALTER TYPE project_visibility ADD VALUE IF NOT EXISTS 'internal';
 
 -- ─── Update public_feed view ─────────────────────────────────────────────────
--- Rebuild to use explicit filter so 'internal' rows are never exposed.
--- (View already filtered by visibility = 'public'; rebuild is idempotent.)
+-- Rebuild to make the filter explicit: only 'public' rows appear.
+-- 'internal' items are intentionally excluded — they are visible in admin
+-- reports and dashboard but must never surface on the public /updates feed.
+-- 'private' items are excluded from all management-facing surfaces entirely.
 CREATE OR REPLACE VIEW public_feed AS
 SELECT
   f.id,

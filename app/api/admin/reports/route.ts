@@ -5,6 +5,10 @@ import { generateAIReport, ReportData } from '@/lib/ai/reports'
 
 export const dynamic = 'force-dynamic'
 
+// Visibility values that appear in reports and dashboard.
+// 'private' items are excluded from all management-facing output.
+const REPORTABLE_VISIBILITIES = ['internal', 'public'] as const
+
 const ALLOWED_RANGE_DAYS: Record<string, number> = {
   '7': 7,
   '30': 30,
@@ -89,13 +93,13 @@ export async function GET(req: NextRequest) {
       supabaseAdmin
         .from('feed_items')
         .select('id, title, what_changed, department, published_at, hours_saved, before_summary, after_summary, shoutout, kpi_area')
-        .in('visibility', ['internal', 'public'])
+        .in('visibility', REPORTABLE_VISIBILITIES)
         .gte('published_at', sinceDate)
         .lte('published_at', untilDate),
       supabaseAdmin
         .from('execution_pipeline')
         .select('id, title, status, tool_used, actual_hours_saved, created_at, kpi_area, solution_category')
-        .in('visibility', ['internal', 'public'])
+        .in('visibility', REPORTABLE_VISIBILITIES)
         .gte('created_at', sinceDate)
         .lte('created_at', untilDate),
     ])
